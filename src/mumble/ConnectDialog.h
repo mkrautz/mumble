@@ -268,6 +268,14 @@ class ConnectDialog : public QDialog, public Ui::ConnectDialog {
 
 		bool bLastFound;
 
+		/// bAllowPoing determines whether ConnectDialog can use
+		/// UDP packets to ping remote hosts to be able to show a
+		/// ping latency and user count.
+		bool bAllowPing;
+		/// bAllowHostLookup determines whether ConnectDialog can
+		/// resolve hosts via DNS, Bonjour, and so on.
+		bool bAllowHostLookup;
+
 		QMap<QString, QIcon> qmIcons;
 
 		void sendPing(const QHostAddress &, unsigned short port);

@@ -834,6 +834,9 @@ ConnectDialog::ConnectDialog(QWidget *p, bool autoconnect) : QDialog(p), bAutoCo
 
 	siAutoConnect = NULL;
 
+	bAllowPing = g.s.ptProxyType == Settings::NoProxy;
+	bAllowHostLookup = g.s.ptProxyType == Settings::NoProxy;
+
 	if (tPublicServers.elapsed() >= 60 * 24 * 1000000ULL) {
 		qlPublicServers.clear();
 	}
@@ -857,17 +860,30 @@ ConnectDialog::ConnectDialog(QWidget *p, bool autoconnect) : QDialog(p), bAutoCo
 	
 	qpbAdd->setHidden(g.s.disableConnectDialogEditing);
 	qpbEdit->setHidden(g.s.disableConnectDialogEditing);
-	
+
+	// Hide ping and user count if we are not allowed to ping.
+	if (!bAllowPing) {
+		qtwServers->setColumnCount(1);
+	}
+
 	qtwServers->sortItems(1, Qt::AscendingOrder);
 
 #if QT_VERSION >= 0x050000
 	qtwServers->header()->setSectionResizeMode(0, QHeaderView::Stretch);
-	qtwServers->header()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
-	qtwServers->header()->setSectionResizeMode(2, QHeaderView::ResizeToContents);
+	if (qtwServers->columnCount() >= 2) {
+		qtwServers->header()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
+	}
+	if (qtwServers->columnCount() >= 3) {
+		qtwServers->header()->setSectionResizeMode(2, QHeaderView::ResizeToContents);
+	}
 #else
 	qtwServers->header()->setResizeMode(0, QHeaderView::Stretch);
-	qtwServers->header()->setResizeMode(1, QHeaderView::ResizeToContents);
-	qtwServers->header()->setResizeMode(2, QHeaderView::ResizeToContents);
+	if (qtwServers->columnCount() >= 2) {
+		qtwServers->header()->setResizeMode(1, QHeaderView::ResizeToContents);
+	}
+	if (qtwServers->columnCount() >= 3) {
+		qtwServers->header()->setResizeMode(2, QHeaderView::ResizeToContents);
+	}
 #endif
 
 	connect(qtwServers->header(), SIGNAL(sortIndicatorChanged(int, Qt::SortOrder)), this, SLOT(OnSortChanged(int, Qt::SortOrder)));
@@ -982,7 +998,7 @@ ConnectDialog::~ConnectDialog() {
 
 void ConnectDialog::accept() {
 	ServerItem *si = static_cast<ServerItem *>(qtwServers->currentItem());
-	if (! si || si->qlAddresses.isEmpty() || si->qsHostname.isEmpty()) {
+	if (! si || (bAllowHostLookup && si->qlAddresses.isEmpty()) || si->qsHostname.isEmpty()) {
 		qWarning() << "Invalid server";
 		return;
 	}
@@ -1212,6 +1228,9 @@ void ConnectDialog::on_qtwServers_currentItemChanged(QTreeWidgetItem *item, QTre
 	}
 	
 	bool bOk = !si->qlAddresses.isEmpty();
+	if (!bAllowHostLookup) {
+		bOk = true;
+	}
 	qdbbButtonBox->button(QDialogButtonBox::Ok)->setEnabled(bOk);
 
 	bLastFound = true;
@@ -1353,22 +1372,27 @@ void ConnectDialog::timeTick() {
 				if (! siAutoConnect->qlAddresses.isEmpty()) {
 					accept();
 					return;
+				} else if (!bAllowHostLookup) {
+					accept();
+					return;
 				}
 			}
 		}
 	}
 
-	// Start DNS Lookup of first unknown hostname
-	foreach(const QString &host, qlDNSLookup) {
-		if (qsDNSActive.contains(host))
-			continue;
+	if (bAllowHostLookup) {
+		// Start DNS Lookup of first unknown hostname
+		foreach(const QString &host, qlDNSLookup) {
+			if (qsDNSActive.contains(host))
+				continue;
 
-		qlDNSLookup.removeAll(host);
-		qlDNSLookup.append(host);
+			qlDNSLookup.removeAll(host);
+			qlDNSLookup.append(host);
 
-		qsDNSActive.insert(host);
-		QHostInfo::lookupHost(host, this, SLOT(lookedUp(QHostInfo)));
-		break;
+			qsDNSActive.insert(host);
+			QHostInfo::lookupHost(host, this, SLOT(lookedUp(QHostInfo)));
+			break;
+		}
 	}
 
 	ServerItem *current = static_cast<ServerItem *>(qtwServers->currentItem());
@@ -1429,6 +1453,10 @@ void ConnectDialog::timeTick() {
 
 
 void ConnectDialog::startDns(ServerItem *si) {
+	if (!bAllowHostLookup) {
+		return;
+	}
+
 	QString host = si->qsHostname.toLower();
 
 	if (si->qlAddresses.isEmpty()) {
@@ -1469,6 +1497,10 @@ void ConnectDialog::startDns(ServerItem *si) {
 }
 
 void ConnectDialog::stopDns(ServerItem *si) {
+	if (!bAllowHostLookup) {
+		return;
+	}
+
 	foreach(const QHostAddress &qha, si->qlAddresses) {
 		qpAddress addr(HostAddress(qha), si->usPort);
 		if (qhPings.contains(addr)) {
@@ -1520,8 +1552,10 @@ void ConnectDialog::lookedUp(QHostInfo info) {
 
 	qhDNSWait.remove(host);
 
-	foreach(const qpAddress &addr, qs) {
-		sendPing(addr.first.toAddress(), addr.second);
+	if (bAllowPing) {
+		foreach(const qpAddress &addr, qs) {
+			sendPing(addr.first.toAddress(), addr.second);
+		}
 	}
 }
 
