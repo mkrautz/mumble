@@ -882,6 +882,7 @@ void MainWindow::setupView(bool toggle_minimize) {
 	Settings::WindowLayout wlTmp = g.s.wlWindowLayout;
 	switch (wlTmp) {
 		case Settings::LayoutClassic:
+			qWarning("classic");
 			removeDockWidget(qdwLog);
 			addDockWidget(Qt::LeftDockWidgetArea, qdwLog);
 			qdwLog->show();
@@ -889,6 +890,7 @@ void MainWindow::setupView(bool toggle_minimize) {
 			qdwChat->show();
 			break;
 		case Settings::LayoutStacked:
+			qWarning("stacked");
 			removeDockWidget(qdwLog);
 			addDockWidget(Qt::BottomDockWidgetArea, qdwLog);
 			qdwLog->show();
@@ -896,6 +898,7 @@ void MainWindow::setupView(bool toggle_minimize) {
 			qdwChat->show();
 			break;
 		case Settings::LayoutHybrid:
+			qWarning("hybrid");
 			removeDockWidget(qdwLog);
 			removeDockWidget(qdwChat);
 			addDockWidget(Qt::LeftDockWidgetArea, qdwLog);
@@ -904,11 +907,11 @@ void MainWindow::setupView(bool toggle_minimize) {
 			qdwChat->show();
 			break;
 		default:
+			qWarning("custom");
 			wlTmp = Settings::LayoutCustom;
 			break;
 	}
 	qteChat->updateGeometry();
-	g.s.wlWindowLayout = wlTmp;
 
 	QRect geom = frameGeometry();
 
@@ -1011,6 +1014,8 @@ void MainWindow::setupView(bool toggle_minimize) {
 			qwPTTButtonWidget = NULL;
 		}
 	}
+
+	g.s.wlWindowLayout = wlTmp;
 }
 
 void MainWindow::on_qaServerConnect_triggered(bool autoconnect) {
@@ -2265,7 +2270,9 @@ void MainWindow::on_qaConfigDialog_triggered() {
 		dlg = new ConfigDialog(this);
 
 	if (dlg->exec() == QDialog::Accepted) {
+		qWarning("before wlWindowLayout = %i", g.s.wlWindowLayout);
 		setupView(false);
+		qWarning("after wlWindowLayout = %i", g.s.wlWindowLayout);
 		updateTransmitModeComboBox();
 		updateTrayIcon();
 
@@ -2288,6 +2295,8 @@ void MainWindow::on_qaConfigDialog_triggered() {
 	}
 
 	delete dlg;
+
+	qWarning("way after wlWindowLayout = %i", g.s.wlWindowLayout);
 }
 
 void MainWindow::on_qaConfigMinimal_triggered() {
@@ -3019,18 +3028,22 @@ void MainWindow::on_qteLog_highlighted(const QUrl &url) {
 }
 
 void MainWindow::on_qdwChat_dockLocationChanged(Qt::DockWidgetArea) {
+	qWarning("chat dockLocationChanged!");
 	g.s.wlWindowLayout = Settings::LayoutCustom;
 }
 
 void MainWindow::on_qdwLog_dockLocationChanged(Qt::DockWidgetArea) {
+	qWarning("log dockLocationChanged!");
 	g.s.wlWindowLayout = Settings::LayoutCustom;
 }
 
 void MainWindow::on_qdwChat_visibilityChanged(bool) {
+	qWarning("chat dockLocationChanged!");
 	g.s.wlWindowLayout = Settings::LayoutCustom;
 }
 
 void MainWindow::on_qdwLog_visibilityChanged(bool) {
+		qWarning("log visibility dockLocationChanged!");
 	g.s.wlWindowLayout = Settings::LayoutCustom;
 }
 

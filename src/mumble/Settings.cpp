@@ -990,6 +990,7 @@ void Settings::save() {
 	SAVELOAD(qbaMinimalViewState, "ui/minimalviewstate");
 	SAVELOAD(qbaConfigGeometry, "ui/ConfigGeometry");
 	SAVELOAD(wlWindowLayout, "ui/WindowLayout");
+	qWarning("SAVE wlWindowLayout %i", wlWindowLayout);
 	SAVELOAD(qbaSplitterState, "ui/splitter");
 	SAVELOAD(qbaHeaderState, "ui/header");
 	SAVELOAD(qsUsername, "ui/username");
