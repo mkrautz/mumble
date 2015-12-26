@@ -890,6 +890,8 @@ void MainWindow::setupView(bool toggle_minimize) {
 
 	switch (g.s.wlWindowLayout) {
 		case Settings::LayoutClassic:
+			qtIconToolbar->setMovable(false);
+			addToolBar(Qt::TopToolBarArea, qtIconToolbar);
 			removeDockWidget(qdwLog);
 			addDockWidget(Qt::LeftDockWidgetArea, qdwLog);
 			qdwLog->show();
@@ -897,6 +899,8 @@ void MainWindow::setupView(bool toggle_minimize) {
 			qdwChat->show();
 			break;
 		case Settings::LayoutStacked:
+			qtIconToolbar->setMovable(false);
+			addToolBar(Qt::TopToolBarArea, qtIconToolbar);
 			removeDockWidget(qdwLog);
 			addDockWidget(Qt::BottomDockWidgetArea, qdwLog);
 			qdwLog->show();
@@ -904,6 +908,8 @@ void MainWindow::setupView(bool toggle_minimize) {
 			qdwChat->show();
 			break;
 		case Settings::LayoutHybrid:
+			qtIconToolbar->setMovable(false);
+			addToolBar(Qt::TopToolBarArea, qtIconToolbar);
 			removeDockWidget(qdwLog);
 			removeDockWidget(qdwChat);
 			addDockWidget(Qt::LeftDockWidgetArea, qdwLog);
@@ -911,7 +917,9 @@ void MainWindow::setupView(bool toggle_minimize) {
 			addDockWidget(Qt::BottomDockWidgetArea, qdwChat);
 			qdwChat->show();
 			break;
-		default:
+		case Settings::LayoutCustom:
+			qtIconToolbar->setMovable(true);
+			addToolBar(toolBarArea(qtIconToolbar), qtIconToolbar);
 			break;
 	}
 	qteChat->updateGeometry();
