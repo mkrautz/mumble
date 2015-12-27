@@ -149,7 +149,8 @@ HEADERS *= BanEditor.h \
     ApplicationPalette.h \
     ThemeInfo.h \
     Themes.h \
-    OverlayPositionableItem.h
+    OverlayPositionableItem.h \
+    UserLockFile.h
 
 SOURCES *= BanEditor.cpp \
     ACLEditor.cpp \
@@ -371,7 +372,7 @@ win32 {
     RC_FILE = mumble.rc
   }
   HEADERS	*= GlobalShortcut_win.h Overlay_win.h TaskList.h
-  SOURCES	*= GlobalShortcut_win.cpp TextToSpeech_win.cpp Overlay_win.cpp SharedMemory_win.cpp Log_win.cpp os_win.cpp TaskList.cpp ../../overlay/HardHook.cpp ../../overlay/ods.cpp
+  SOURCES	*= GlobalShortcut_win.cpp TextToSpeech_win.cpp Overlay_win.cpp SharedMemory_win.cpp Log_win.cpp os_win.cpp TaskList.cpp ../../overlay/HardHook.cpp ../../overlay/ods.cpp UserLockFile_win.cpp
   LIBS		*= -ldxguid -ldinput8 -lsapi -lole32 -lws2_32 -ladvapi32 -lwintrust -ldbghelp -llibsndfile-1 -lshell32 -lshlwapi -luser32 -lgdi32 -lpsapi
   LIBS		*= -ldelayimp -delayload:shell32.dll
 
@@ -443,6 +444,8 @@ unix {
   CONFIG *= link_pkgconfig
 
   PKGCONFIG *= sndfile
+
+  SOURCES *= UserLockFile_null.cpp
 
   macx {
     TARGET = Mumble
