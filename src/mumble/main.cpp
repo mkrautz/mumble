@@ -98,6 +98,67 @@ int main(int argc, char **argv) {
 #endif
 #endif
 
+#ifdef Q_OS_WIN
+	// Allow other processes to send keystrokes
+	// and mouse clicks to Mumble.
+	if (!ChangeWindowMessageFilter(WM_SYSKEYDOWN, MSGFLT_ADD)) {
+		qWarning("os_win: unable to allow WM_SYSKEYDOWN: 0x%.8x", GetLastError());
+	}
+	if (!ChangeWindowMessageFilter(WM_SYSKEYUP, MSGFLT_ADD)) {
+		qWarning("os_win: unable to allow WM_SYSKEYUP: 0x%.8x", GetLastError());
+	}
+	if (!ChangeWindowMessageFilter(WM_KEYDOWN, MSGFLT_ADD)) {
+		qWarning("os_win: unable to allow WM_KEYDOWN: 0x%.8x", GetLastError());
+	}
+	if (!ChangeWindowMessageFilter(WM_KEYUP, MSGFLT_ADD)) {
+		qWarning("os_win: unable to allow WM_KEYUP: 0x%.8x", GetLastError());
+	}
+	if (!ChangeWindowMessageFilter(WM_LBUTTONDOWN, MSGFLT_ADD)) {
+		qWarning("os_win: unable to allow WM_LBUTTONDOWN: 0x%.8x", GetLastError());
+	}
+	if (!ChangeWindowMessageFilter(WM_LBUTTONUP, MSGFLT_ADD)) {
+		qWarning("os_win: unable to allow WM_LBUTTONUP: 0x%.8x", GetLastError());
+	}
+	if (!ChangeWindowMessageFilter(WM_RBUTTONDOWN, MSGFLT_ADD)) {
+		qWarning("os_win: unable to allow WM_RBUTTONDOWN: 0x%.8x", GetLastError());
+	}
+	if (!ChangeWindowMessageFilter(WM_RBUTTONUP, MSGFLT_ADD)) {
+		qWarning("os_win: unable to allow WM_RBUTTONUP: 0x%.8x", GetLastError());
+	}
+	if (!ChangeWindowMessageFilter(WM_MBUTTONDOWN, MSGFLT_ADD)) {
+		qWarning("os_win: unable to allow WM_MBUTTONDOWN: 0x%.8x", GetLastError());
+	}
+	if (!ChangeWindowMessageFilter(WM_MBUTTONUP, MSGFLT_ADD)) {
+		qWarning("os_win: unable to allow WM_MBUTTONUP: 0x%.8x", GetLastError());
+	}
+	if (!ChangeWindowMessageFilter(WM_XBUTTONDOWN, MSGFLT_ADD)) {
+		qWarning("os_win: unable to allow WM_XBUTTONDOWN: 0x%.8x", GetLastError());
+	}
+	if (!ChangeWindowMessageFilter(WM_XBUTTONUP, MSGFLT_ADD)) {
+		qWarning("os_win: unable to allow WM_XBUTTONUP: 0x%.8x", GetLastError());
+	}
+	if (!ChangeWindowMessageFilter(WM_INPUT, MSGFLT_ADD)) {
+		qWarning("os_win unable to allow WM_INPUT: 0x%.8x", GetLastError());
+	}
+	if (!ChangeWindowMessageFilter(WM_APPCOMMAND, MSGFLT_ADD)) {
+		qWarning("os_win unable to allow WM_APPCOMMAND: 0x%.8x", GetLastError());
+	}
+	if (!ChangeWindowMessageFilter(WM_MOUSEMOVE, MSGFLT_ADD)) {
+		qWarning("os_win unable to allow WM_MOUSEMOVE: 0x%.8x", GetLastError());
+	}
+	if (!ChangeWindowMessageFilter(WM_CHAR, MSGFLT_ADD)) {
+		qWarning("os_win unable to allow WM_CHAR: 0x%.8x", GetLastError());
+	}
+
+	for (DWORD i = 0; i < 0xffff; i++) {
+		if (!ChangeWindowMessageFilter(i, MSGFLT_ADD)) {
+			qWarning("os_win unable to allow 0x%x: 0x%.8x", i, GetLastError());
+		}
+	}
+
+	qWarning("os_win: modified window message filter to allow input events from other programs");
+#endif
+
 	// Initialize application object.
 	MumbleApplication a(argc, argv);
 	a.setApplicationName(QLatin1String("Mumble"));
