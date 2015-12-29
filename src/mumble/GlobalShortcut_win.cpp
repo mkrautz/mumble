@@ -289,6 +289,7 @@ LRESULT CALLBACK GlobalShortcutWin::HookKeyboard(int nCode, WPARAM wParam, LPARA
 			keyid |= 0x8000U;
 		ql << keyid;
 		ql << QVariant(QUuid(GUID_SysKeyboard));
+		ql << QVariant(static_cast<uint>(w));
 		bool suppress = gsw->handleButton(ql, !(key->flags & LLKHF_UP));
 
 		if (! suppress && g.ocIntercept) {
@@ -324,39 +325,52 @@ LRESULT CALLBACK GlobalShortcutWin::HookMouse(int nCode, WPARAM wParam, LPARAM l
 	if (nCode >= 0) {
 		bool suppress = false;
 		UINT msg = wParam;
+		UINT vk = 0;
 
 		switch (msg) {
 			case WM_LBUTTONDOWN:
+				vk = VK_LBUTTON;
 				ucKeyState[VK_LBUTTON] |= 0x80;
 				if (gsw->tDoubleClick.restart() < (QApplication::doubleClickInterval() * 1000ULL))
 					msg = WM_LBUTTONDBLCLK;
 				break;
 			case WM_LBUTTONUP:
+				vk = VK_LBUTTON;
 				ucKeyState[VK_LBUTTON] &= 0x7f;
 				break;
 			case WM_RBUTTONDOWN:
+				vk = VK_RBUTTON;
 				ucKeyState[VK_RBUTTON] |= 0x80;
 				break;
 			case WM_RBUTTONUP:
+				vk = VK_RBUTTON;
 				ucKeyState[VK_RBUTTON] &= 0x7f;
 				break;
 			case WM_MBUTTONDOWN:
+				vk = VK_MBUTTON;
 				ucKeyState[VK_MBUTTON] |= 0x80;
 				break;
 			case WM_MBUTTONUP:
+				vk = VK_MBUTTON;
 				ucKeyState[VK_MBUTTON] &= 0x7f;
 				break;
 			case WM_XBUTTONDOWN:
-				if ((mouse->mouseData >> 16) == XBUTTON1)
+				if ((mouse->mouseData >> 16) == XBUTTON1) {
+					vk = VK_XBUTTON1;
 					ucKeyState[VK_XBUTTON1] |= 0x80;
-				else if ((mouse->mouseData >> 16) == XBUTTON2)
+				} else if ((mouse->mouseData >> 16) == XBUTTON2) {
+					vk = VK_XBUTTON2;
 					ucKeyState[VK_XBUTTON2] |= 0x80;
+				}
 				break;
 			case WM_XBUTTONUP:
-				if ((mouse->mouseData >> 16) == XBUTTON1)
+				if ((mouse->mouseData >> 16) == XBUTTON1) {
+					vk = VK_XBUTTON1;
 					ucKeyState[VK_XBUTTON1] &= 0x7f;
-				else if ((mouse->mouseData >> 16) == XBUTTON2)
+				} else if ((mouse->mouseData >> 16) == XBUTTON2) {
+					vk = VK_XBUTTON2;
 					ucKeyState[VK_XBUTTON2] &= 0x7f;
+				}
 				break;
 			default:
 				break;
@@ -439,6 +453,7 @@ LRESULT CALLBACK GlobalShortcutWin::HookMouse(int nCode, WPARAM wParam, LPARAM l
 			QList<QVariant> ql;
 			ql << static_cast<unsigned int>((btn << 8) | 0x4);
 			ql << QVariant(QUuid(GUID_SysMouse));
+			ql << QVariant(static_cast<uint>(vk));
 			bool wantsuppress = gsw->handleButton(ql, down);
 			// Do not suppress LBUTTONUP though (so suppression can be deactvated via mouse).
 			if (! suppress)
@@ -585,6 +600,18 @@ BOOL GlobalShortcutWin::EnumDevicesCB(LPCDIDEVICEINSTANCE pdidi, LPVOID pContext
 }
 
 void GlobalShortcutWin::timeTicked() {
+	// Poll for winhooks changes... Yay!
+	foreach (const QVariant &buttonVariant, qlDownButtons) {
+		QList<QVariant> button = buttonVariant.toList();
+		QUuid device = button.at(1).toUuid();
+		if (button.length() > 2 && (device == GUID_SysKeyboard || device == GUID_SysMouse)) {
+			qWarning("0x%x", button.at(0));
+			UINT vkey = button.at(2).toUInt();
+			SHORT state = GetAsyncKeyState(static_cast<int>(vkey));
+			qWarning("state (%s) 0x%x", qPrintable(buttonName(button)), state);
+		}
+	}
+
 	if (g.mw->uiNewHardware != uiHardwareDevices) {
 		uiHardwareDevices = g.mw->uiNewHardware;
 
@@ -730,7 +757,7 @@ QString GlobalShortcutWin::buttonName(const QVariant &v) {
 	GlobalShortcutWin *gsw = static_cast<GlobalShortcutWin *>(GlobalShortcutEngine::engine);
 
 	const QList<QVariant> &sublist = v.toList();
-	if (sublist.count() != 2)
+	if (sublist.count() < 2)
 		return QString();
 
 	bool ok = false;
