@@ -340,11 +340,13 @@ void ALSAAudioInput::run() {
 	ALSA_ERRBAIL(snd_pcm_hw_params_set_buffer_size_near(capture_handle, hw_params, &wantBuff));
 	ALSA_ERRBAIL(snd_pcm_hw_params(capture_handle, hw_params));
 
-	qWarning("ALSAAudioInput: Actual buffer %d hz, %d channel %ld samples [%ld per period]",rrate,iChannels,wantBuff,wantPeriod);
-
 	ALSA_ERRBAIL(snd_pcm_hw_params_current(capture_handle, hw_params));
 	ALSA_ERRBAIL(snd_pcm_hw_params_get_channels(hw_params, &iMicChannels));
 	ALSA_ERRBAIL(snd_pcm_hw_params_get_rate(hw_params, &iMicFreq, NULL));
+	ALSA_ERRBAIL(snd_pcm_hw_params_get_period_size(hw_params, &wantPeriod, &dir));
+	ALSA_ERRBAIL(snd_pcm_hw_params_get_buffer_size(hw_params, &wantBuff));
+
+	qWarning("ALSAAudioInput: Actual buffer %d hz, %d channel %ld samples [%ld per period]",iMicFreq,iMicChannels,wantBuff,wantPeriod);
 
 #ifdef ALSA_VERBOSE
 	snd_output_t *log;
@@ -369,7 +371,7 @@ void ALSAAudioInput::run() {
 	eMicFormat = SampleShort;
 	initializeMixer();
 
-	char inbuff[wantPeriod * iChannels * sizeof(short)];
+	char inbuff[wantPeriod * iMicChannels * sizeof(short)];
 
 	qml.unlock();
 
@@ -466,7 +468,14 @@ void ALSAAudioOutput::run() {
 	ALSA_ERRBAIL(snd_pcm_hw_params_get_period_size(hw_params, &period_size, &dir));
 	ALSA_ERRBAIL(snd_pcm_hw_params_get_buffer_size(hw_params, &buffer_size));
 
-	qWarning("ALSAAudioOutput: Actual buffer %d hz, %d channel %ld samples [%ld per period]",rrate,iChannels,buffer_size,period_size);
+
+	ALSA_ERRBAIL(snd_pcm_hw_params_current(pcm_handle, hw_params));
+	ALSA_ERRBAIL(snd_pcm_hw_params_get_channels(hw_params, &iChannels));
+	ALSA_ERRBAIL(snd_pcm_hw_params_get_rate(hw_params, &rrate, NULL));
+	iMixerFreq = rrate;
+	eSampleFormat = SampleShort;
+
+	qWarning("ALSAAudioOutput: Actual buffer %d hz, %d channel %ld samples [%ld per period]",iMixerFreq,iChannels,buffer_size,period_size);
 
 	ALSA_ERRBAIL(snd_pcm_sw_params_current(pcm_handle, sw_params));
 	ALSA_ERRBAIL(snd_pcm_sw_params_set_avail_min(pcm_handle, sw_params, period_size));
@@ -516,12 +525,6 @@ void ALSAAudioOutput::run() {
 		SPEAKER_SIDE_RIGHT,
 		SPEAKER_BACK_CENTER
 	};
-
-	ALSA_ERRBAIL(snd_pcm_hw_params_current(pcm_handle, hw_params));
-	ALSA_ERRBAIL(snd_pcm_hw_params_get_channels(hw_params, &iChannels));
-	ALSA_ERRBAIL(snd_pcm_hw_params_get_rate(hw_params, &rrate, NULL));
-	iMixerFreq = rrate;
-	eSampleFormat = SampleShort;
 
 	qWarning("ALSAAudioOutput: Initializing %d channel, %d hz mixer", iChannels, iMixerFreq);
 	initializeMixer(chanmasks);
