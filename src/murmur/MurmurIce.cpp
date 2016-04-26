@@ -1554,6 +1554,12 @@ static void impl_Server_getUptime(const ::Murmur::AMD_Server_getUptimePtr cb, in
 	cb->ice_response(static_cast<int>(server->tUptime.elapsed()/1000000LL));
 }
 
+static void impl_Server_reloadCertificate(const ::Murmur::AMD_Server_reloadCertificatePtr cb, int server_id) {
+	NEED_SERVER;
+	server->initializeCert();
+	cb->ice_response();
+}
+
 static void impl_Server_addUserToGroup(const ::Murmur::AMD_Server_addUserToGroupPtr cb, int server_id, ::Ice::Int channelid,  ::Ice::Int session,  const ::std::string& group) {
 	NEED_SERVER;
 	NEED_PLAYER;

@@ -182,6 +182,9 @@ namespace Murmur {
 			virtual void getUptime_async(const ::Murmur::AMD_Server_getUptimePtr&,
 			                             const Ice::Current&);
 
+			virtual void reloadCertificate_async(const ::Murmur::AMD_Server_reloadCertificatePtr&,
+			                             const Ice::Current&);
+
 			virtual void ice_ping(const Ice::Current&) const;
 	};
 

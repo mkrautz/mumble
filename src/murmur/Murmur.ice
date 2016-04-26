@@ -746,6 +746,27 @@ module Murmur
 		 * @return Uptime of the virtual server in seconds
 		 */
 		idempotent int getUptime() throws ServerBootedException, InvalidSecretException;
+
+		/**
+		 * Reloads the server's certificate information.
+		 *
+		 * Reconfigure the running server's TLS socket with the current
+		 * values of the "certificate", "key", "passphrase" and "sslDHparams"
+		 * configuration values.
+		 *
+		 * This allows you to live-update the certificate of a running server
+		 * by calling:
+		 *
+		 *    server.setConf("certificate", pemCert)
+		 *    server.setConf("key", pemPrivateKey)
+		 *    server.setConf("passphrase", privateKeyPass) // if the private key is password protected
+		 *    server.reloadCertificate()
+		 *
+		 * New clients will see the new certificate.
+		 * Existing clients will continue to see the certificate the server
+		 * was using when they connected to it.
+		 */
+		 idempotent void reloadCertificate() throws ServerBootedException, InvalidSecretException;
 	};
 
 	/** Callback interface for Meta. You can supply an implementation of this to receive notifications
