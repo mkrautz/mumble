@@ -54,8 +54,11 @@
 
 #define VICTIM_SETUP \
 	ServerUser *pDstServerUser = uSource; \
-	if (msg.has_session()) \
+	if (msg.has_session()) { \
+		qrwlUsers.lockForRead(); \
 		pDstServerUser = qhUsers.value(msg.session()); \
+		qrwlUsers.unlock(); \
+	} \
 	if (! pDstServerUser) \
 		return; \
 	Q_UNUSED(pDstServerUser)
@@ -144,14 +147,22 @@ void Server::msgAuthenticate(ServerUser *uSource, MumbleProto::Authenticate &msg
 		ok = true;
 	}
 
+	int nusers = 0;
 	ServerUser *uOld = NULL;
-	foreach(ServerUser *u, qhUsers) {
-		if (u == uSource)
-			continue;
-		if (((u->iId>=0) && (u->iId == uSource->iId)) ||
-		        (u->qsName.toLower() == uSource->qsName.toLower())) {
-			uOld = u;
-			break;
+
+	{
+		QReadLocker rl(&qrwlUsers);
+
+		nusers = qhUsers.count();
+
+		foreach(ServerUser *u, qhUsers) {
+			if (u == uSource)
+				continue;
+			if (((u->iId>=0) && (u->iId == uSource->iId)) ||
+			        (u->qsName.toLower() == uSource->qsName.toLower())) {
+				uOld = u;
+				break;
+			}
 		}
 	}
 
@@ -164,7 +175,7 @@ void Server::msgAuthenticate(ServerUser *uSource, MumbleProto::Authenticate &msg
 		}
 	}
 
-	if ((id != 0) && (qhUsers.count() > iMaxUsers)) {
+	if ((id != 0) && (nusers > iMaxUsers)) {
 		reason = QString::fromLatin1("Server is full (max %1 users)").arg(iMaxUsers);
 		rtType = MumbleProto::Reject_RejectType_ServerFull;
 		ok = false;
@@ -337,6 +348,7 @@ void Server::msgAuthenticate(ServerUser *uSource, MumbleProto::Authenticate &msg
 	sendAll(mpus, ~ 0x010202);
 
 	// Transmit other users profiles
+	qrwlUsers.lockForRead();
 	foreach(ServerUser *u, qhUsers) {
 		if (u->sState != ServerUser::Authenticated)
 			continue;
@@ -382,6 +394,7 @@ void Server::msgAuthenticate(ServerUser *uSource, MumbleProto::Authenticate &msg
 
 		sendMessage(uSource, mpus);
 	}
+	qrwlUsers.unlock();
 
 	// Send syncronisation packet
 	MumbleProto::ServerSync mpss;
@@ -1178,6 +1191,7 @@ void Server::msgTextMessage(ServerUser *uSource, MumbleProto::TextMessage &msg) 
 		}
 	}
 
+	qrwlUsers.lockForRead();
 	for (int i=0;i < msg.session_size(); ++i) {
 		unsigned int session = msg.session(i);
 		ServerUser *u = qhUsers.value(session);
@@ -1191,6 +1205,7 @@ void Server::msgTextMessage(ServerUser *uSource, MumbleProto::TextMessage &msg) 
 
 		tm.qlSessions.append(session);
 	}
+	qrwlUsers.unlock();
 
 	users.remove(uSource);
 
@@ -1445,10 +1460,16 @@ void Server::msgContextAction(ServerUser *uSource, MumbleProto::ContextAction &m
 	unsigned int session = msg.has_session() ? msg.session() : 0;
 	int id = msg.has_channel_id() ? static_cast<int>(msg.channel_id()) : -1;
 
-	if (session && ! qhUsers.contains(session))
-		return;
+	{
+		QReadLocker rl(&qrwlUsers);
+
+		if (session && ! qhUsers.contains(session))
+			return;
+	}
+
 	if ((id >= 0) && ! qhChannels.contains(id))
 		return;
+
 	emit contextAction(uSource, u8(msg.action()), session, id);
 }
 
@@ -1515,6 +1536,7 @@ void Server::msgUserList(ServerUser *uSource, MumbleProto::UserList &msg) {
 					setInfo(id, info);
 
 					MumbleProto::UserState mpus;
+					qrwlUsers.lockForRead();
 					foreach(ServerUser *serverUser, qhUsers) {
 						if (serverUser->iId == id) {
 							serverUser->qsName = name;
@@ -1522,6 +1544,7 @@ void Server::msgUserList(ServerUser *uSource, MumbleProto::UserList &msg) {
 							break;
 						}
 					}
+					qrwlUsers.unlock();
 					if (mpus.has_session()) {
 						mpus.set_actor(uSource->uiSession);
 						mpus.set_name(u8(name));
@@ -1561,8 +1584,10 @@ void Server::msgVoiceTarget(ServerUser *uSource, MumbleProto::VoiceTarget &msg) 
 			const MumbleProto::VoiceTarget_Target &t = msg.targets(i);
 			for (int j=0;j<t.session_size(); ++j) {
 				unsigned int s = t.session(j);
+				qrwlUsers.lockForRead();
 				if (qhUsers.contains(s))
 					wt.qlSessions << s;
+				qrwlUsers.unlock();
 			}
 			if (t.has_channel_id()) {
 				unsigned int id = t.channel_id();
@@ -1701,6 +1726,8 @@ void Server::msgRequestBlob(ServerUser *uSource, MumbleProto::RequestBlob &msg) 
 		}
 	}
 	if (ntextures || ncomments) {
+		QReadLocker rl(&qrwlUsers);
+
 		MumbleProto::UserState mpus;
 		for (int i=0;i<ntextures;++i) {
 			int session = msg.session_texture(i);

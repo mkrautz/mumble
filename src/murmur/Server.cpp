@@ -520,6 +520,9 @@ void Server::setLiveConf(const QString &key, const QString &value) {
 
 		iMaxUsers = newmax;
 		qqIds.clear();
+
+		QReadLocker rl(&qrwlUsers);
+
 		for (int id = 1; id < iMaxUsers * 2; ++id)
 			if (!qhUsers.contains(id))
 				qqIds.enqueue(id);
@@ -673,11 +676,15 @@ void Server::udpActivated(int socket) {
 	len=::recvfrom(sock, encrypt, UDP_PACKET_SIZE, 0, reinterpret_cast<struct sockaddr *>(&from), &fromlen);
 #endif
 
+	qrwlUsers.lockForRead();
+	int nusers = qhUsers.count();
+	qrwlUsers.unlock();
+
 	// Cloned from ::run(), as it's the only UDP data we care about until the thread is started.
 	quint32 *ping = reinterpret_cast<quint32 *>(encrypt);
 	if ((len == 12) && (*ping == 0) && bAllowPing) {
 		ping[0] = uiVersionBlob;
-		ping[3] = qToBigEndian(static_cast<quint32>(qhUsers.count()));
+		ping[3] = qToBigEndian(static_cast<quint32>(nusers));
 		ping[4] = qToBigEndian(static_cast<quint32>(iMaxUsers));
 		ping[5] = qToBigEndian(static_cast<quint32>(iMaxBandwidth));
 
@@ -1398,6 +1405,8 @@ void Server::connectionClosed(QAbstractSocket::SocketError err, const QString &r
 
 	u->deleteLater();
 
+	QReadLocker rl(&qrwlUsers);
+
 	if (qhUsers.isEmpty())
 		stopThread();
 }
@@ -1485,7 +1494,10 @@ void Server::checkTimeout() {
 }
 
 void Server::tcpTransmitData(QByteArray a, unsigned int id) {
+	qrwlUsers.lockForRead();
 	Connection *c = qhUsers.value(id);
+	qrwlUsers.unlock();
+
 	if (c) {
 		QByteArray qba;
 		int len = a.size();
@@ -1502,7 +1514,10 @@ void Server::tcpTransmitData(QByteArray a, unsigned int id) {
 }
 
 void Server::doSync(unsigned int id) {
+	qrwlUsers.lockForRead();
 	ServerUser *u = qhUsers.value(id);
+	qrwlUsers.unlock();
+
 	if (u) {
 		log(u, "Requesting crypt-nonce resync");
 		MumbleProto::CryptSetup mpcs;
@@ -1520,6 +1535,7 @@ void Server::sendProtoAll(const ::google::protobuf::Message &msg, unsigned int m
 }
 
 void Server::sendProtoExcept(ServerUser *u, const ::google::protobuf::Message &msg, unsigned int msgType, unsigned int version) {
+	QReadLocker rl(&qrwlUsers);
 	QByteArray cache;
 	foreach(ServerUser *usr, qhUsers)
 		if ((usr != u) && (usr->sState == ServerUser::Authenticated))
@@ -1603,18 +1619,23 @@ bool Server::unregisterUser(int id) {
 		}
 	}
 
-	foreach(ServerUser *u, qhUsers) {
-		if (u->iId == id) {
-			clearACLCache(u);
-			MumbleProto::UserState mpus;
-			mpus.set_session(u->uiSession);
-			mpus.set_user_id(-1);
-			sendAll(mpus);
+	{
+		QReadLocker rl(&qrwlUsers);
 
-			u->iId = -1;
-			break;
+		foreach(ServerUser *u, qhUsers) {
+			if (u->iId == id) {
+				clearACLCache(u);
+				MumbleProto::UserState mpus;
+				mpus.set_session(u->uiSession);
+				mpus.set_user_id(-1);
+				sendAll(mpus);
+
+				u->iId = -1;
+				break;
+			}
 		}
 	}
+
 	return true;
 }
 
@@ -1747,18 +1768,18 @@ void Server::clearACLCache(User *p) {
 			foreach(ChanACL::ChanCache *h, acCache)
 				delete h;
 			acCache.clear();
-
-			foreach(ServerUser *u, qhUsers)
-				if (u->sState == ServerUser::Authenticated)
-					flushClientPermissionCache(u, mppq);
 		}
 	}
 
 	{
 		QWriteLocker lock(&qrwlUsers);
 
-		foreach(ServerUser *u, qhUsers)
+		foreach(ServerUser *u, qhUsers) {
+			if (u->sState == ServerUser::Authenticated) {
+				flushClientPermissionCache(u, mppq);
+			}
 			u->qmTargetCache.clear();
+		}
 	}
 }
 
@@ -1795,16 +1816,20 @@ void Server::recheckCodecVersions(ServerUser *connectingUser) {
 	int opus = 0;
 
 	// Count how many users use which codec
-	foreach(ServerUser *u, qhUsers) {
-		if (u->qlCodecs.isEmpty() && ! u->bOpus)
-			continue;
+	{
+		QReadLocker rl(&qrwlUsers);
 
-		++users;
-		if (u->bOpus)
-			++opus;
+		foreach(ServerUser *u, qhUsers) {
+			if (u->qlCodecs.isEmpty() && ! u->bOpus)
+				continue;
 
-		foreach(int version, u->qlCodecs)
-			++qmCodecUsercount[version];
+			++users;
+			if (u->bOpus)
+				++opus;
+
+			foreach(int version, u->qlCodecs)
+				++qmCodecUsercount[version];
+		}
 	}
 
 	if (! users)
@@ -1859,6 +1884,7 @@ void Server::recheckCodecVersions(ServerUser *connectingUser) {
 	sendAll(mpcv);
 
 	if (bOpus) {
+		QReadLocker rl(&qrwlUsers);
 		foreach(ServerUser *u, qhUsers) {
 			// Prevent connected users that could not yet declare their opus capability during msgAuthenticate from being spammed.
 			// Only authenticated users and the currently connecting user (if recheck is called in that context) have a reliable u->bOpus.

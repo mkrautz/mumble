@@ -321,7 +321,10 @@ void MurmurDBus::authenticateSlot(int &res, QString &uname, int sessionId, const
 }
 
 #define PLAYER_SETUP_VAR(var) \
-  ServerUser *pUser = server->qhUsers.value(var); \
+  ServerUser *pUser = NULL; \
+  server->qrwlUsers.lockForRead(); \
+  server->qhUsers.value(var); \
+  server->qrwlUsers.unlock(); \
   if (! pUser) { \
     qdbc.send(msg.createErrorReply("net.sourceforge.mumble.Error.session", "Invalid session id")); \
     return; \

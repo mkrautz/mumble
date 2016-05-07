@@ -97,9 +97,13 @@ void Server::update() {
 	t=doc.createTextNode(getDigest());
 	tag.appendChild(t);
 
+	qrwlUsers.lockForRead();
+	int nusers = qhUsers.count();
+	qrwlUsers.unlock();
+
 	tag=doc.createElement(QLatin1String("users"));
 	root.appendChild(tag);
-	t=doc.createTextNode(QString::number(qhUsers.count()));
+	t=doc.createTextNode(QString::number(nusers));
 	tag.appendChild(t);
 
 	tag=doc.createElement(QLatin1String("channels"));

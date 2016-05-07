@@ -592,7 +592,11 @@ void MurmurIce::contextAction(const ::User *pSrc, const QString &action, unsigne
 		MumbleProto::ContextActionModify mpcam;
 		mpcam.set_action(u8(action));
 		mpcam.set_operation(MumbleProto::ContextActionModify_Operation_Remove);
+
+		s->qrwlUsers.lockForRead();
 		ServerUser *su = s->qhUsers.value(session);
+		s->qrwlUsers.unlock();
+
 		if (su)
 			s->sendMessage(su, mpcam);
 	}
@@ -799,7 +803,9 @@ Ice::ObjectPtr ServerLocator::locate(const Ice::Current &, Ice::LocalObjectPtr &
 	}
 
 #define NEED_PLAYER \
+	server->qrwlUsers.lockForRead(); \
 	ServerUser *user = server->qhUsers.value(session); \
+	server->qrwlUsers.unlock(); \
 	if (!user) { \
 		cb->ice_exception(::Murmur::InvalidSessionException()); \
 		return; \
@@ -979,6 +985,8 @@ static void impl_Server_getLogLen(const ::Murmur::AMD_Server_getLogLenPtr cb, in
 static void impl_Server_getUsers(const ::Murmur::AMD_Server_getUsersPtr cb, int server_id) {
 	NEED_SERVER;
 	::Murmur::UserMap pm;
+
+	server->qrwlUsers.lockForRead();
 	foreach(const ::User *p, server->qhUsers) {
 		::Murmur::User mp;
 		if (static_cast<const ServerUser *>(p)->sState == ::ServerUser::Authenticated) {
@@ -986,6 +994,8 @@ static void impl_Server_getUsers(const ::Murmur::AMD_Server_getUsersPtr cb, int 
 			pm[p->uiSession] = mp;
 		}
 	}
+	server->qrwlUsers.unlock();
+
 	cb->ice_response(pm);
 }
 
@@ -1164,7 +1174,10 @@ static void impl_Server_removeContextCallback(const Murmur::AMD_Server_removeCon
 		const Murmur::ServerContextCallbackPrx &oneway = Murmur::ServerContextCallbackPrx::uncheckedCast(cbptr->ice_oneway()->ice_connectionCached(false)->ice_timeout(5000));
 
 		foreach(int session, qmPrx.keys()) {
+			server->qrwlUsers.lockForRead();
 			ServerUser *user = server->qhUsers.value(session);
+			server->qrwlUsers.unlock();
+
 			const QMap<QString, ::Murmur::ServerContextCallbackPrx> &qm = qmPrx[session];
 			foreach(const QString &act, qm.keys(oneway)) {
 				mi->removeServerContextCallback(server, session, act);
@@ -1454,10 +1467,12 @@ static void impl_Server_updateRegistration(const ::Murmur::AMD_Server_updateRegi
 	}
 
 	if (info.contains(ServerDB::User_Comment)) {
+		server->qrwlUsers.lockForRead();	
 		foreach(ServerUser *u, server->qhUsers) {
 			if (u->iId == id)
 				server->setUserState(u, u->cChannel, u->bMute, u->bDeaf, u->bSuppress, u->bPrioritySpeaker, u->qsName, info.value(ServerDB::User_Comment));
 		}
+		server->qrwlUsers.unlock();
 	}
 
 	cb->ice_response();
@@ -1535,7 +1550,10 @@ static void impl_Server_setTexture(const ::Murmur::AMD_Server_setTexturePtr cb, 
 	if (! server->setTexture(userid, qba)) {
 		cb->ice_exception(InvalidTextureException());
 	} else {
+		server->qrwlUsers.lockForRead();
 		ServerUser *user = server->qhUsers.value(userid);
+		server->qrwlUsers.unlock();
+
 		if (user) {
 			MumbleProto::UserState mpus;
 			mpus.set_session(user->uiSession);

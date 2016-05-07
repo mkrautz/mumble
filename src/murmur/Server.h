@@ -238,11 +238,17 @@ class Server : public QThread {
 		quint32 uiVersionBlob;
 		QList<QSocketNotifier *> qlUdpNotifier;
 
+		/// qrwlUsers is used for synchronization
+		/// of qhUsers, qhPeerUsers and qhHostUSers
+		/// between the server's voice thread and the
+		/// the main thread.
+		QReadWriteLock qrwlUsers;
 		QHash<unsigned int, ServerUser *> qhUsers;
 		QHash<QPair<HostAddress, quint16>, ServerUser *> qhPeerUsers;
 		QHash<HostAddress, QSet<ServerUser *> > qhHostUsers;
+
 		QHash<unsigned int, Channel *> qhChannels;
-		QReadWriteLock qrwlUsers;
+
 		ChanACL::ACLCache acCache;
 		QMutex qmCache;
 		QHash<int, QString> qhUserNameCache;

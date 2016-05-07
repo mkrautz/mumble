@@ -251,7 +251,10 @@ void Server::setTempGroups(int userid, int sessionId, Channel *cChannel, const Q
 			g->qsTemporary.insert(- sessionId);
 	}
 
+	qrwlUsers.lockForRead();
 	User *p = qhUsers.value(userid);
+	qrwlUsers.unlock();
+
 	if (p)
 		clearACLCache(p);
 }

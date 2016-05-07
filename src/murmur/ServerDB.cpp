@@ -1131,9 +1131,13 @@ bool Server::setTexture(int id, const QByteArray &texture) {
 	else
 		tex = texture;
 
-	foreach(ServerUser *u, qhUsers) {
-		if (u->iId == id)
-			hashAssign(u->qbaTexture, u->qbaTextureHash, tex);
+	{
+		QReadLocker rl(&qrwlUsers);
+
+		foreach(ServerUser *u, qhUsers) {
+			if (u->iId == id)
+				hashAssign(u->qbaTexture, u->qbaTextureHash, tex);
+		}
 	}
 
 	int res = -2;
