@@ -3,7 +3,9 @@
 // that can be found in the LICENSE file at the root of the
 // Mumble source tree or at <https://www.mumble.info/LICENSE>.
 
-/* Copyright (C) 2007, Sebastian Schlingmann <mit_service@users.sourceforge.net>
+/* Copyright (C) 2005-2011, Thorvald Natvig <thorvald@natvig.com>
+   Copyright (C) 2007, Sebastian Schlingmann <mit_service@users.sourceforge.net>
+   Copyright (C) 2008-2011, Mikkel Krautz <mikkel@krautz.dk>
    Copyright (C) 2014, Mayur Pawashe <zorgiepoo@gmail.com>
 
    All rights reserved.
