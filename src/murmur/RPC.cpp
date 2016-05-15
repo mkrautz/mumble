@@ -402,23 +402,29 @@ void Server::setTempGroups(int userid, int sessionId, Channel *cChannel, const Q
 	if (! cChannel)
 		cChannel = qhChannels.value(0);
 
-	Group *g;
-	foreach(g, cChannel->qhGroups) {
-		g->qsTemporary.remove(userid);
-		if (sessionId != 0)
-			g->qsTemporary.remove(- sessionId);
+	{
+		QWriteLocker wl(&qrwlVoiceThread);
+
+        Group *g;
+        foreach(g, cChannel->qhGroups) {
+            g->qsTemporary.remove(userid);
+            if (sessionId != 0)
+                g->qsTemporary.remove(- sessionId);
+        }
+
+        QString gname;
+        foreach(gname, groups) {
+            g = cChannel->qhGroups.value(gname);
+            if (! g) {
+                g = new Group(cChannel, gname);
+            }
+            g->qsTemporary.insert(userid);
+            if (sessionId != 0)
+                g->qsTemporary.insert(- sessionId);
+        }
 	}
 
-	QString gname;
-	foreach(gname, groups) {
-		g = cChannel->qhGroups.value(gname);
-		if (! g) {
-			g = new Group(cChannel, gname);
-		}
-		g->qsTemporary.insert(userid);
-		if (sessionId != 0)
-			g->qsTemporary.insert(- sessionId);
-	}
+
 
 	User *p = qhUsers.value(userid);
 	if (p)
@@ -436,16 +442,20 @@ void Server::clearTempGroups(User *user, Channel *cChannel, bool recurse) {
 
 	qlChans.append(cChannel);
 
-	while (!qlChans.isEmpty()) {
-		Channel *chan = qlChans.takeLast();
-		Group *g;
-		foreach(g, chan->qhGroups) {
-			g->qsTemporary.remove(user->iId);
-			g->qsTemporary.remove(- static_cast<int>(user->uiSession));
-		}
+	{
+		QWriteLocker wl(&qrwlVoiceThread);
 
-		if (recurse)
-			qlChans << chan->qlChannels;
+		while (!qlChans.isEmpty()) {
+			Channel *chan = qlChans.takeLast();
+			Group *g;
+			foreach(g, chan->qhGroups) {
+				g->qsTemporary.remove(user->iId);
+				g->qsTemporary.remove(-static_cast<int>(user->uiSession));
+			}
+
+			if (recurse)
+				qlChans << chan->qlChannels;
+		}
 	}
 
 	clearACLCache(user);
