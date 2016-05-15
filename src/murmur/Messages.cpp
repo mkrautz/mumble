@@ -73,7 +73,7 @@
 void Server::msgAuthenticate(ServerUser *uSource, MumbleProto::Authenticate &msg) {
 	if ((msg.tokens_size() > 0) || (uSource->sState == ServerUser::Authenticated)) {
 		QStringList qsl;
-		for (int i=0;i<msg.tokens_size();++i)
+		for (int i = 0; i < msg.tokens_size(); ++i)
 			qsl << u8(msg.tokens(i));
 		{
 			QMutexLocker qml(&qmCache);
@@ -95,23 +95,24 @@ void Server::msgAuthenticate(ServerUser *uSource, MumbleProto::Authenticate &msg
 	// Fetch ID and stored username.
 	// Since this may call DBus, which may recall our dbus messages, this function needs
 	// to support re-entrancy, and also to support the fact that sessions may go away.
-	int id = authenticate(uSource->qsName, pw, uSource->uiSession, uSource->qslEmail, uSource->qsHash, uSource->bVerified, uSource->peerCertificateChain());
+	int id = authenticate(uSource->qsName, pw, uSource->uiSession, uSource->qslEmail, uSource->qsHash,
+						  uSource->bVerified, uSource->peerCertificateChain());
 
 	uSource->iId = id >= 0 ? id : -1;
 
 	QString reason;
 	MumbleProto::Reject_RejectType rtType = MumbleProto::Reject_RejectType_None;
 
-	if (id==-2 && ! nameok) {
+	if (id == -2 && !nameok) {
 		reason = "Invalid username";
 		rtType = MumbleProto::Reject_RejectType_InvalidUsername;
-	} else if (id==-1) {
+	} else if (id == -1) {
 		reason = "Wrong certificate or password for existing user";
 		rtType = MumbleProto::Reject_RejectType_WrongUserPW;
-	} else if (id==-2 && ! qsPassword.isEmpty() && qsPassword != pw) {
+	} else if (id == -2 && !qsPassword.isEmpty() && qsPassword != pw) {
 		reason = "Invalid server password";
 		rtType = MumbleProto::Reject_RejectType_WrongServerPW;
-	} else if (id==-3) {
+	} else if (id == -3) {
 		reason = "Your account information can not be verified currently. Please try again later";
 		rtType = MumbleProto::Reject_RejectType_AuthenticatorFail;
 	} else {
@@ -119,11 +120,11 @@ void Server::msgAuthenticate(ServerUser *uSource, MumbleProto::Authenticate &msg
 	}
 
 	ServerUser *uOld = NULL;
-	foreach(ServerUser *u, qhUsers) {
+		foreach(ServerUser *u, qhUsers) {
 		if (u == uSource)
 			continue;
-		if (((u->iId>=0) && (u->iId == uSource->iId)) ||
-		        (u->qsName.toLower() == uSource->qsName.toLower())) {
+		if (((u->iId >= 0) && (u->iId == uSource->iId)) ||
+			(u->qsName.toLower() == uSource->qsName.toLower())) {
 			uOld = u;
 			break;
 		}
@@ -131,7 +132,8 @@ void Server::msgAuthenticate(ServerUser *uSource, MumbleProto::Authenticate &msg
 
 	// Allow reuse of name from same IP
 	if (ok && uOld && (uSource->iId == -1)) {
-		if ((uOld->peerAddress() != uSource->peerAddress()) && (uSource->qsHash.isEmpty() || (uSource->qsHash != uOld->qsHash))) {
+		if ((uOld->peerAddress() != uSource->peerAddress()) &&
+			(uSource->qsHash.isEmpty() || (uSource->qsHash != uOld->qsHash))) {
 			reason = "Username already in use";
 			rtType = MumbleProto::Reject_RejectType_UsernameInUse;
 			ok = false;
@@ -157,9 +159,9 @@ void Server::msgAuthenticate(ServerUser *uSource, MumbleProto::Authenticate &msg
 		lc = qhChannels.value(iDefaultChan);
 	}
 
-	if (! lc || ! hasPermission(uSource, lc, ChanACL::Enter) || isChannelFull(lc, uSource)) {
+	if (!lc || !hasPermission(uSource, lc, ChanACL::Enter) || isChannelFull(lc, uSource)) {
 		lc = qhChannels.value(iDefaultChan);
-		if (! lc || ! hasPermission(uSource, lc, ChanACL::Enter) || isChannelFull(lc, uSource)) {
+		if (!lc || !hasPermission(uSource, lc, ChanACL::Enter) || isChannelFull(lc, uSource)) {
 			lc = root;
 			if (isChannelFull(lc, uSource)) {
 				reason = QString::fromLatin1("Server channels are full");
@@ -169,9 +171,9 @@ void Server::msgAuthenticate(ServerUser *uSource, MumbleProto::Authenticate &msg
 		}
 	}
 
-	if (! ok) {
+	if (!ok) {
 		log(uSource, QString("Rejected connection from %1: %2")
-			.arg(addressToString(uSource->peerAddress(), uSource->peerPort()), reason));
+				.arg(addressToString(uSource->peerAddress(), uSource->peerPort()), reason));
 		MumbleProto::Reject mpr;
 		mpr.set_reason(u8(reason));
 		mpr.set_type(rtType);
@@ -194,13 +196,17 @@ void Server::msgAuthenticate(ServerUser *uSource, MumbleProto::Authenticate &msg
 	}
 
 	// Setup UDP encryption
-	uSource->csCrypt.genKey();
+	{
+		QMutexLocker l(&uSource->qmCrypt);
 
-	MumbleProto::CryptSetup mpcrypt;
-	mpcrypt.set_key(std::string(reinterpret_cast<const char *>(uSource->csCrypt.raw_key), AES_BLOCK_SIZE));
-	mpcrypt.set_server_nonce(std::string(reinterpret_cast<const char *>(uSource->csCrypt.encrypt_iv), AES_BLOCK_SIZE));
-	mpcrypt.set_client_nonce(std::string(reinterpret_cast<const char *>(uSource->csCrypt.decrypt_iv), AES_BLOCK_SIZE));
-	sendMessage(uSource, mpcrypt);
+		uSource->csCrypt.genKey();
+
+		MumbleProto::CryptSetup mpcrypt;
+		mpcrypt.set_key(std::string(reinterpret_cast<const char *>(uSource->csCrypt.raw_key), AES_BLOCK_SIZE));
+		mpcrypt.set_server_nonce(std::string(reinterpret_cast<const char *>(uSource->csCrypt.encrypt_iv), AES_BLOCK_SIZE));
+		mpcrypt.set_client_nonce(std::string(reinterpret_cast<const char *>(uSource->csCrypt.decrypt_iv), AES_BLOCK_SIZE));
+		sendMessage(uSource, mpcrypt);
+	}
 
 	bool fake_celt_support = false;
 	if (msg.celt_versions_size() > 0) {
@@ -1388,6 +1394,9 @@ void Server::msgQueryUsers(ServerUser *uSource, MumbleProto::QueryUsers &msg) {
 
 void Server::msgPing(ServerUser *uSource, MumbleProto::Ping &msg) {
 	MSG_SETUP_NO_UNIDLE(ServerUser::Authenticated);
+
+	QMutexLocker l(&uSource->qmCrypt);
+
 	CryptState &cs=uSource->csCrypt;
 
 	cs.uiRemoteGood = msg.good();
@@ -1416,6 +1425,9 @@ void Server::msgPing(ServerUser *uSource, MumbleProto::Ping &msg) {
 
 void Server::msgCryptSetup(ServerUser *uSource, MumbleProto::CryptSetup &msg) {
 	MSG_SETUP_NO_UNIDLE(ServerUser::Authenticated);
+
+	QMutexLocker l(&uSource->qmCrypt);
+
 	if (! msg.has_client_nonce()) {
 		log(uSource, "Requested crypt-nonce resync");
 		msg.set_server_nonce(std::string(reinterpret_cast<const char *>(uSource->csCrypt.encrypt_iv), AES_BLOCK_SIZE));
@@ -1593,7 +1605,6 @@ void Server::msgCodecVersion(ServerUser *, MumbleProto::CodecVersion &) {
 void Server::msgUserStats(ServerUser*uSource, MumbleProto::UserStats &msg) {
 	MSG_SETUP_NO_UNIDLE(ServerUser::Authenticated);
 	VICTIM_SETUP;
-	const CryptState &cs = pDstServerUser->csCrypt;
 	const BandwidthRecord &bwr = pDstServerUser->bwr;
 	const QList<QSslCertificate> &certs = pDstServerUser->peerCertificateChain();
 
@@ -1623,6 +1634,9 @@ void Server::msgUserStats(ServerUser*uSource, MumbleProto::UserStats &msg) {
 
 	if (local) {
 		MumbleProto::UserStats_Stats *mpusss;
+
+		QMutexLocker l(&pDstServerUser->qmCrypt);
+		const CryptState &cs = pDstServerUser->csCrypt;
 
 		mpusss = msg.mutable_from_client();
 		mpusss->set_good(cs.uiGood);
