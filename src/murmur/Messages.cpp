@@ -612,29 +612,33 @@ void Server::msgUserState(ServerUser *uSource, MumbleProto::UserState &msg) {
 		bBroadcast = true;
 	}
 
-	if (msg.has_self_deaf()) {
-		uSource->bSelfDeaf = msg.self_deaf();
-		if (uSource->bSelfDeaf)
-			msg.set_self_mute(true);
-		bBroadcast = true;
-	}
-
-	if (msg.has_self_mute()) {
-		uSource->bSelfMute = msg.self_mute();
-		if (! uSource->bSelfMute) {
-			msg.set_self_deaf(false);
-			uSource->bSelfDeaf = false;
-		}
-		bBroadcast = true;
-	}
-
-	if (msg.has_plugin_context()) {
+	// Writing to bSelfMute, bSelfDeaf and ssContext
+	// requires holding a write lock on qrwlVoiceThread.
+	{
 		QWriteLocker wl(&qrwlVoiceThread);
 
-		uSource->ssContext = msg.plugin_context();
+        if (msg.has_self_deaf()) {
+            uSource->bSelfDeaf = msg.self_deaf();
+            if (uSource->bSelfDeaf)
+                msg.set_self_mute(true);
+            bBroadcast = true;
+        }
 
-		// Make sure to clear this from the packet so we don't broadcast it
-		msg.clear_plugin_context();
+        if (msg.has_self_mute()) {
+            uSource->bSelfMute = msg.self_mute();
+            if (! uSource->bSelfMute) {
+                msg.set_self_deaf(false);
+                uSource->bSelfDeaf = false;
+            }
+            bBroadcast = true;
+        }
+
+        if (msg.has_plugin_context()) {
+            uSource->ssContext = msg.plugin_context();
+
+            // Make sure to clear this from the packet so we don't broadcast it
+            msg.clear_plugin_context();
+        }
 	}
 
 	if (msg.has_plugin_identity()) {
