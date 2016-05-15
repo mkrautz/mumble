@@ -625,7 +625,10 @@ void Server::msgUserState(ServerUser *uSource, MumbleProto::UserState &msg) {
 	}
 
 	if (msg.has_plugin_context()) {
+		QWriteLocker wl(&qrwlVoiceThread);
+
 		uSource->ssContext = msg.plugin_context();
+
 		// Make sure to clear this from the packet so we don't broadcast it
 		msg.clear_plugin_context();
 	}
