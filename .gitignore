@@ -40,3 +40,13 @@ doxygen/
 .qmake.cache
 .qmake.stash
 .DS_Store
+
+.idea
+moc_*.cpp
+*_automoc.cpp
+CMakeFiles
+CMakeCache.txt
+src/murmur/Murmur.cpp
+src/murmur/Murmur.h
+src/murmur/murmur
+*.cmake
