@@ -2112,7 +2112,11 @@ void V1_RedirectWhisperGroupAdd::impl(bool) {
 
 	QString qssource = u8(request.source().name());
 	QString qstarget = u8(request.target().name());
-	user->qmWhisperRedirect.insert(qssource, qstarget);
+
+	{
+		QWriteLocker wl(&server->qrwlVoiceThread);
+		user->qmWhisperRedirect.insert(qssource, qstarget);
+	}
 
 	server->clearACLCache(user);
 
@@ -2128,7 +2132,11 @@ void V1_RedirectWhisperGroupRemove::impl(bool) {
 	}
 
 	QString qssource = u8(request.source().name());
-	user->qmWhisperRedirect.remove(qssource);
+
+	{
+		QWriteLocker wl(&server->qrwlVoiceThread);
+		user->qmWhisperRedirect.remove(qssource);
+	}
 
 	server->clearACLCache(user);
 
