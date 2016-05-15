@@ -1659,7 +1659,7 @@ void Server::msgUserStats(ServerUser*uSource, MumbleProto::UserStats &msg) {
 	if (local) {
 		MumbleProto::UserStats_Stats *mpusss;
 
-		QMutexLcker l(&pDstServerUser->qmCrypt);
+		QMutexLocker l(&pDstServerUser->qmCrypt);
 		const CryptState &cs = pDstServerUser->csCrypt;
 
 		mpusss = msg.mutable_from_client();
