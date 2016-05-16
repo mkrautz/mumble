@@ -1843,13 +1843,13 @@ void V1_ACLSet::impl(bool) {
 		QWriteLocker wl(&server->qrwlVoiceThread);
 
 		QHash<QString, QSet<int> > hOldTemp;
-				foreach(g, channel->qhGroups) {
-				hOldTemp.insert(g->qsName, g->qsTemporary);
-				delete g;
-			}
-				foreach(acl, channel->qlACL) {
-				delete acl;
-			}
+		foreach(g, channel->qhGroups) {
+			hOldTemp.insert(g->qsName, g->qsTemporary);
+			delete g;
+		}
+		foreach(acl, channel->qlACL) {
+			delete acl;
+		}
 
 		channel->qhGroups.clear();
 		channel->qlACL.clear();
