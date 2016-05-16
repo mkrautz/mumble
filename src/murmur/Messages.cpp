@@ -1316,13 +1316,13 @@ void Server::msgACL(ServerUser *uSource, MumbleProto::ACL &msg) {
 
 			QHash<QString, QSet<int> > hOldTemp;
 
-					foreach(g, c->qhGroups) {
-					hOldTemp.insert(g->qsName, g->qsTemporary);
-					delete g;
-				}
+			foreach(g, c->qhGroups) {
+				hOldTemp.insert(g->qsName, g->qsTemporary);
+				delete g;
+			}
 
-					foreach(a, c->qlACL)
-					delete a;
+			foreach(a, c->qlACL)
+				delete a;
 
 			c->qhGroups.clear();
 			c->qlACL.clear();
