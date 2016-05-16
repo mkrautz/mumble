@@ -409,26 +409,24 @@ void Server::setTempGroups(int userid, int sessionId, Channel *cChannel, const Q
 	{
 		QWriteLocker wl(&qrwlVoiceThread);
 
-        Group *g;
-        foreach(g, cChannel->qhGroups) {
-            g->qsTemporary.remove(userid);
-            if (sessionId != 0)
-                g->qsTemporary.remove(- sessionId);
-        }
+		Group *g;
+		foreach(g, cChannel->qhGroups) {
+			g->qsTemporary.remove(userid);
+			if (sessionId != 0)
+				g->qsTemporary.remove(- sessionId);
+		}
 
-        QString gname;
-        foreach(gname, groups) {
-            g = cChannel->qhGroups.value(gname);
-            if (! g) {
-                g = new Group(cChannel, gname);
-            }
-            g->qsTemporary.insert(userid);
-            if (sessionId != 0)
-                g->qsTemporary.insert(- sessionId);
-        }
+		QString gname;
+		foreach(gname, groups) {
+			g = cChannel->qhGroups.value(gname);
+			if (! g) {
+				g = new Group(cChannel, gname);
+			}
+			g->qsTemporary.insert(userid);
+			if (sessionId != 0)
+				g->qsTemporary.insert(- sessionId);
+		}
 	}
-
-
 
 	User *p = qhUsers.value(userid);
 	if (p)
