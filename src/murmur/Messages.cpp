@@ -1366,16 +1366,16 @@ void Server::msgACL(ServerUser *uSource, MumbleProto::ACL &msg) {
 			{
 				QWriteLocker wl(&qrwlVoiceThread);
 
-                a = new ChanACL(c);
-                a->bApplyHere = true;
-                a->bApplySubs = false;
-                if (uSource->iId >= 0)
-                    a->iUserId = uSource->iId;
-                else
-                    a->qsGroup = QLatin1Char('$') + uSource->qsHash;
-                a->iUserId = uSource->iId;
-                a->pDeny = ChanACL::None;
-                a->pAllow = ChanACL::Write | ChanACL::Traverse;
+				a = new ChanACL(c);
+				a->bApplyHere = true;
+				a->bApplySubs = false;
+				if (uSource->iId >= 0)
+					a->iUserId = uSource->iId;
+				else
+					a->qsGroup = QLatin1Char('$') + uSource->qsHash;
+				a->iUserId = uSource->iId;
+				a->pDeny = ChanACL::None;
+				a->pAllow = ChanACL::Write | ChanACL::Traverse;
 			}
 
 			clearACLCache();
