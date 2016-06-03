@@ -1554,9 +1554,60 @@ static void impl_Server_getUptime(const ::Murmur::AMD_Server_getUptimePtr cb, in
 	cb->ice_response(static_cast<int>(server->tUptime.elapsed()/1000000LL));
 }
 
-static void impl_Server_reloadCertificate(const ::Murmur::AMD_Server_reloadCertificatePtr cb, int server_id) {
+static void impl_Server_updateCertificate(const ::Murmur::AMD_Server_reloadCertificatePtr cb, int server_id, const ::std::string& certificate, const ::std::string& privateKey, const ::std::string& passphrase) {
 	NEED_SERVER;
+
+	QByteArray certPem(certificate.c_str());
+	QByteArray privateKeyPem(privateKey.c_str());
+	QByteArray passphraseBytes(passphrase.c_str());
+	bool ok = true;
+
+	QSslCertificate cert(certPem);
+	if (cert.isNull()) {
+		ok = false;
+		goto out;
+	}
+
+	QSslKey privKey(privateKeyPem, QSsl::Rsa, QSsl::Pem, QSsl::PrivateKey, passphraseBytes);
+	if (key.isNull()) {
+		ok = false;
+		goto out;
+	}
+
+	QSslKey pubKey = cert.publicKey();
+
+	if (privKey.algorithm() != QSsl::Rsa || pubKey.algorithm != QSsl::Rsa) {
+		ok = false;
+		goto out;
+	}
+
+	RSA *privRSA = reinterpret_cast<RSA *>(privKey.handle());
+	RSA *pubRSA = reinterpret_cast<RSA *>(pubKey.handle());
+
+	if (BN_cmp(pubRSA->n, privRSA->n) != 0) {
+		ok = false;
+		goto out;
+	}
+
+	if (BN_cmp(pubRSA->e, privRSA->e) != 0) {
+		ok = false;
+		goto out;
+	}
+
+	server->setConf("certificate", u8(certificate));
+	server->setConf("key", u8(privateKey));
+	server->setConf("passphrase", u8(passphrase));
 	server->initializeCert();
+
+out:
+	// Ensure OpenSSL error queue is clean.
+	ERR_clear_error();
+
+	if (!ok) {
+		cb->ice_exception(InvalidInputDataException());
+		return;
+	}
+
 	cb->ice_response();
 }
 

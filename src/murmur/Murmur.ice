@@ -264,6 +264,8 @@ module Murmur
 	exception InvalidSecretException extends MurmurException {};
 	/** This is thrown when the channel operation would excede the channel nesting limit */
 	exception NestingLimitException extends MurmurException {};
+	/** This is thrown when invalid input data was specified. */
+	exception InvalidInputData extends MurmurException {};
 
 	/** Callback interface for servers. You can supply an implementation of this to receive notification
 	 *  messages from the server.
@@ -766,7 +768,7 @@ module Murmur
 		 * Existing clients will continue to see the certificate the server
 		 * was using when they connected to it.
 		 */
-		 idempotent void reloadCertificate() throws ServerBootedException, InvalidSecretException;
+		 idempotent void reloadCertificate(string certificate, string privateKey, string passphrase) throws ServerBootedException, InvalidSecretException, InvalidInputData;
 	};
 
 	/** Callback interface for Meta. You can supply an implementation of this to receive notifications
