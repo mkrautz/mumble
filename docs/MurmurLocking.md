@@ -139,6 +139,8 @@ The rules for accessing these objects are:
 The objects are:
 
 - `Server->qhUsers`
+- `Server->qhHostUsers`
+- `Server->qhPeerUsers`
 - `Server->qhChannels`
 - `ServerUser->uiSession`
 - `ServerUser->sState`
