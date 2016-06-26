@@ -602,6 +602,7 @@ void checkDXGI10Hook(bool preonly) {
 		}
 	} else {
 		#ifdef EXTENDED_OVERLAY_DEBUGOUTPUT
+		HMODULE hDXGI = GetModuleHandleW(L"DXGI.DLL");
 		if (hDXGI) {
 			ods("D3D10: No DXGI.DLL found as loaded. No hooking at this point.");
 		} else {
