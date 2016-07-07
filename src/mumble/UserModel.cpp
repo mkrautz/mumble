@@ -399,6 +399,38 @@ QVariant UserModel::data(const QModelIndex &idx, int role) const {
 				if (! p->qsFriendName.isEmpty())
 					l << qiFriend;
 				return l;
+			case Qt::AccessibleDescriptionRole:
+				QString name = p->qsName;
+				if (! p->qsFriendName.isEmpty() && (p->qsFriendName.toLower() != p->qsName.toLower()))
+					name = QString::fromLatin1("%1 (%2)").arg(p->qsName).arg(p->qsFriendName);
+
+				QStringList flags;
+				if (p->bPrioritySpeaker)
+					flags << tr("Priority Speaker");
+				if (p->bRecording)
+					flags << tr("Recording");
+				if (p->bMute)
+					flags << tr("Muted");
+				if (p->bSuppress)
+					flags << tr("Suppressed");
+				if (p->bSelfMute)
+					flags << tr("Self-muted");
+				if (p->bLocalMute)
+					flags << tr("Local-muted");
+				if (p->bLocalIgnore)
+					flags << tr("Ignored");
+				if (p->bDeaf)
+					flags << tr("Deafened");
+				if (p->bSelfDeaf)
+					flags << tr("Self-deafened");
+				if (p->iId >= 0)
+					flags << tr("Authenticated");
+				if (! p->qsFriendName.isEmpty())
+					flags << tr("Friend");
+
+				return QString::fromLatin1("%1\n%2: %3")
+							.arg(name)
+							.arg(tr("Flags:")).arg(flags.join(QLatin1String(", ")));
 			default:
 				break;
 		}
@@ -419,6 +451,19 @@ QVariant UserModel::data(const QModelIndex &idx, int role) const {
 				if (idx.column() == 0) {
 					if (! g.s.bShowUserCount || item->iUsers == 0)
 						return c->qsName;
+
+					return QString::fromLatin1("%1 (%2)").arg(c->qsName).arg(item->iUsers);
+				}
+				if (! c->qbaDescHash.isEmpty())
+					l << (item->bCommentSeen ? qiCommentSeen : qiComment);
+
+				if (c->bFiltered)
+					l << (qiFilter);
+
+				return l;
+			case Qt::AccessibleDescriptionRole:
+				QString name = c->qsName;
+				int nusers 
 
 					return QString::fromLatin1("%1 (%2)").arg(c->qsName).arg(item->iUsers);
 				}
