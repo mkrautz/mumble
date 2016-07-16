@@ -179,3 +179,6 @@ CONFIG+=no-qssldiffiehellmanparameters
 CONFIG+=no-xboxinput (Mumble, Win32)
  Don't build in support for global shortcuts
  from Xbox controllers via the XInput DLL.
+
+CONFIG+=no-manual-plugin (Mumble)
+ Don't include the built-in manual plugin.
