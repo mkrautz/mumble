@@ -44,4 +44,7 @@ class Manual : public QDialog, public Ui::Manual {
 		void updateTopAndFront(int orientation, int azimut);
 };
 
+MumblePlugin *ManualPlugin_getMumblePlugin();
+MumblePluginQt *ManualPlugin_getMumblePluginQt();
+
 #endif
