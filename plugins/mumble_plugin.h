@@ -13,24 +13,29 @@
 #if _MSC_VER == 1500 && defined(_M_IX86)
 # define MUMBLE_PLUGIN_MAGIC     0xd63ab7ef
 # define MUMBLE_PLUGIN_MAGIC_2   0xd63ab7fe
+# define MUMBLE_PLUGIN_MAGIC_QT  0xd63ab7ee
 // Visual Studio 2010 x86
 #elif _MSC_VER == 1600 && defined(_M_IX86)
 # define MUMBLE_PLUGIN_MAGIC    0xd63ab7f0
 # define MUMBLE_PLUGIN_MAGIC_2  0xd63ab7ff
+# define MMUBLE_PLUGIN_MAGIC_QT 0xd63ab70f
 // Visual Studio 2013 x86
 #elif _MSC_VER == 1800 && defined(_M_IX86)
 # define MUMBLE_PLUGIN_MAGIC    0xd63ab7c0
 # define MUMBLE_PLUGIN_MAGIC_2  0xd63ab7cf
+# define MUMBLE_PLUGIN_MAGIC_QT 0xd63ab7ca
 // Visual Studio 2013 x64
 #elif _MSC_VER == 1800 && defined(_M_X64)
 # define MUMBLE_PLUGIN_MAGIC    0x9f3ed4c0
 # define MUMBLE_PLUGIN_MAGIC_2  0x9f3ed4cf
+# define MUMBLE_PLUGIN_MAGIC_QT 0x9f3ed4ca
 // Generic plugin magic values for platforms
 // where we do not officially plugins other
 // than "link".
 #else
 # define MUMBLE_PLUGIN_MAGIC    0xf4573570
 # define MUMBLE_PLUGIN_MAGIC_2  0xf457357f
+# define MUMBLE_PLUGIN_MAGIC_QT 0xf457357a
 #endif
 
 #define MUMBLE_PLUGIN_VERSION 2
@@ -53,8 +58,15 @@ typedef struct _MumblePlugin2 {
 	int (__cdecl *trylock)(const std::multimap<std::wstring, unsigned long long int> &);
 } MumblePlugin2;
 
+typedef struct _MumblePluginQt {
+	unsigned int magic;
+	void (__cdecl *about)(void *);
+	void (__cdecl *config)(void *);
+} MumblePluginQt;
+
 typedef MumblePlugin *(__cdecl *mumblePluginFunc)();
 typedef MumblePlugin2 *(__cdecl *mumblePlugin2Func)();
+typedef MumblePluginQt *(__cdecl *mumblePluginQtFunc)();
 
 /*
  * All plugins must implement one function called mumbleGetPlugin(), which
