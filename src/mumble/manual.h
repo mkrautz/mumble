@@ -14,6 +14,8 @@
 
 #include "ui_manual.h"
 
+#include "../../plugins/mumble_plugin.h"
+
 class Manual : public QDialog, public Ui::Manual {
 		Q_OBJECT
 	public:
