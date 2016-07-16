@@ -343,6 +343,7 @@ void Plugins::rescanPlugins() {
 
 	// Handle built-in plugins
 	{
+#if defined(USE_MANUAL_PLUGIN)
 		// Manual plugin
 		PluginInfo *pi = new PluginInfo();
 		pi->filename = QLatin1String("manual.builtin");
@@ -352,6 +353,7 @@ void Plugins::rescanPlugins() {
 		pi->shortname = QString::fromStdWString(pi->p->shortname);
 		pi->enabled = g.s.qmPositionalAudioPlugins.value(pi->filename, true);
 		qlPlugins << pi;
+#endif
 	}
 }
 
