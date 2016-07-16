@@ -14,8 +14,6 @@
 #endif
 
 #include <QPointer>
-#include <math.h>
-#include <float.h>
 #include "manual.h"
 #include "ui_manual.h"
 
