@@ -176,7 +176,7 @@ LCD::LCD() : QObject() {
 
 	iFontHeight = 10;
 
-	initBuffers();
+	initImages();
 
 	iFrameIndex = 0;
 
@@ -379,7 +379,7 @@ void LCD::updateUserView() {
 }
 
 LCD::~LCD() {
-	destroyBuffers();
+	destroyImages();
 }
 
 bool LCD::hasDevices() {
