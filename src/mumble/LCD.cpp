@@ -187,7 +187,9 @@ LCD::LCD() : QObject() {
 		bool enabled = g.s.qmLCDDevices.contains(d->name()) ? g.s.qmLCDDevices.value(d->name()) : true;
 		d->setEnabled(enabled);
 	}
+
 	qiLogo = QIcon(QLatin1String("skin:mumble.svg")).pixmap(48,48).toImage().convertToFormat(QImage::Format_MonoLSB);
+
 	updateUserView();
 }
 
