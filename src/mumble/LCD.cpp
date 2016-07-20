@@ -204,25 +204,20 @@ void LCD::tick() {
 	updateUserView();
 }
 
-void LCD::initBuffers() {
+void LCD::initImages() {
 	foreach(LCDDevice *d, devmgr.qlDevices) {
 		QSize size = d->size();
-		if (! qhImageBuffers.contains(size)) {
+		if (! qhImages.contains(size)) {
 			size_t buflen = (size.width() * size.height()) / 8;
-			qhImageBuffers[size] = new unsigned char[buflen];
-			qhImages[size] = new QImage(qhImageBuffers[size], size.width(), size.height(), QImage::Format_MonoLSB);
+			qhImages[size] = new QImage(size.width(), size.height(), QImage::Format_MonoLSB);
 		}
 	}
 }
 
-void LCD::destroyBuffers() {
+void LCD::destroyImages() {
 	foreach(QImage *img, qhImages)
 		delete img;
 	qhImages.clear();
-
-	foreach(unsigned char *buf, qhImageBuffers)
-		delete [] buf;
-	qhImageBuffers.clear();
 }
 
 struct ListEntry {

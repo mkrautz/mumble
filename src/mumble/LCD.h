@@ -80,8 +80,8 @@ class LCD : public QObject {
 		int iFrameIndex;
 		QHash<QSize, unsigned char *> qhImageBuffers;
 		QHash<QSize, QImage *> qhImages;
-		void initBuffers();
-		void destroyBuffers();
+		void initImages();
+		void destroyImages();
 		QImage qiLogo;
 		QTimer *qtTimer;
 	public slots:
