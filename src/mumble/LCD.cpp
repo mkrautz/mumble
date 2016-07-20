@@ -202,7 +202,6 @@ void LCD::initImages() {
 	foreach(LCDDevice *d, devmgr.qlDevices) {
 		QSize size = d->size();
 		if (! qhImages.contains(size)) {
-			size_t buflen = (size.width() * size.height()) / 8;
 			qhImages[size] = new QImage(size.width(), size.height(), QImage::Format_MonoLSB);
 		}
 	}
