@@ -241,7 +241,7 @@ void LCD::updateUserView() {
 		painter.setPen(Qt::white);
 		painter.setFont(qfNormal);
 
-		img->fill(Qt::black);
+		painter.fillRect(0, 0, size.width(), size.height(), Qt::black);
 
 		if (! me) {
 			qmNew.clear();
