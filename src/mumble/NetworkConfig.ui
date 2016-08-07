@@ -111,7 +111,7 @@
        </widget>
       </item>
       <item row="0" column="1" colspan="3">
-       <widget class="QComboBox" name="qcbType">
+       <widget class="MUComboBox" name="qcbType">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
           <horstretch>0</horstretch>
