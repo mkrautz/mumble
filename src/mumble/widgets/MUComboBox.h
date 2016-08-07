@@ -6,5 +6,7 @@
 #include <QComboBox>
 
 class MUComboBox : public QComboBox {
+	Q_OBJECT
+public:
 	MUComboBox(QWidget *parent = NULL);
 };
