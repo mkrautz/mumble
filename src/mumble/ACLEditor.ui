@@ -688,6 +688,11 @@ Contains the list of members inherited by the current channel. Uncheck &lt;i&gt;
    <header>RichTextEditor.h</header>
    <container>1</container>
   </customwidget>
+  <customwidget>
+   <class>MUComboBox</class>
+   <extends>QComboBox</extends>
+   <header>widgets/MUComboBox.h</header>
+  </customwidget>
  </customwidgets>
  <tabstops>
   <tabstop>qleChannelPassword</tabstop>

@@ -896,6 +896,13 @@
   <tabstop>qsNoise</tabstop>
   <tabstop>qsAmp</tabstop>
  </tabstops>
+ <customwidgets>
+  <customwidget>
+   <class>MUComboBox</class>
+   <extends>QComboBox</extends>
+   <header>widgets/MUComboBox.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
