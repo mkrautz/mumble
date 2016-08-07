@@ -3,6 +3,9 @@
 // that can be found in the LICENSE file at the root of the
 // Mumble source tree or at <https://www.mumble.info/LICENSE>.
 
+#ifndef MUMBLE_MUMBLE_WIDGETS_MUCOMBOBOX_H_
+#define MUMBLE_MUMBLE_WIDGETS_MUCOMBOBOX_H_
+
 #include <QComboBox>
 
 class MUComboBox : public QComboBox {
@@ -10,3 +13,5 @@ class MUComboBox : public QComboBox {
 public:
 	MUComboBox(QWidget *parent = NULL);
 };
+
+#endif
