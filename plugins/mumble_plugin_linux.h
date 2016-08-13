@@ -22,6 +22,18 @@
 
 #include "mumble_plugin.h"
 
+#if __SIZEOF_LONG__ != __SIZEOF_POINTER__
+# error Expected sizeof(long) == sizeof(void *)
+#endif
+
+#if __SIZEOF_POINTER__ == 4
+# define PTR_MASK(var) (var & 0xffffffffUL)
+#elif __SIZEOF_POINTER__ == 8
+# define PTR_MASK(var) (var & 0xffffffffffffffffUL)
+#else
+# error Unhandled __SIZEOF_POINTER__ value
+#endif
+
 pid_t pPid;
 static PTR_TYPE_CONCRETE pModule;
 
@@ -43,7 +55,10 @@ static inline std::string readAll(std::string fn) {
 	return content;
 }
 
-static inline PTR_TYPE_CONCRETE getModuleAddr(pid_t pid, std::string mod) {
+static inline PTR_TYPE_CONCRETE getModuleAddr(pid_t pid, const wchar_t *modname) {
+	std::wstring modnameWide(modname);
+	std::string modnameNonWide(modnameWide.begin(), modnameWide.end());
+
 	std::stringstream ss;
 	ss << std::string("/proc/");
 	ss << static_cast<unsigned long>(pid);
@@ -137,7 +152,7 @@ static inline PTR_TYPE_CONCRETE getModuleAddr(pid_t pid, std::string mod) {
 			size_t lastSlash = pathname.find_last_of('/');
 			if (pathname.size() > lastSlash + 1) {
 				std::string basename = pathname.substr(lastSlash + 1);
-				if (basename == mod) {
+				if (basename == modnameNonWide) {
 					unsigned long addr = strtoul(baseaddr.c_str(), NULL, 16);
 					return addr;
 				}
@@ -148,13 +163,13 @@ static inline PTR_TYPE_CONCRETE getModuleAddr(pid_t pid, std::string mod) {
 	return 0;
 }
 
-static inline PTR_TYPE_CONCRETE getModuleAddr(std::string modname) {
+static inline PTR_TYPE_CONCRETE getModuleAddr(const wchar_t *modname) {
 	return getModuleAddr(pPid, modname);
 }
 
 static inline bool peekProc(PTR_TYPE base, void *dest, size_t len) {
 	struct iovec in;
-	in.iov_base = reinterpret_cast<void *>(base); // Address from target process
+	in.iov_base = reinterpret_cast<void *>(PTR_MASK(base)); // Address from target process
 	in.iov_len = len; // Length
 
 	struct iovec out;
@@ -167,9 +182,18 @@ static inline bool peekProc(PTR_TYPE base, void *dest, size_t len) {
 }
 
 template<class T>
+T peekProc(PTR_TYPE base) {
+	T v = 0;
+	if (!peekProc(base, reinterpret_cast<T *>(&v), sizeof(T))) {
+		return 0;
+	}
+	return v;
+}
+
+template<class T>
 bool peekProc(PTR_TYPE base, T &dest) {
 	struct iovec in;
-	in.iov_base = reinterpret_cast<void *>(base); // Address from target process
+	in.iov_base = reinterpret_cast<void *>(PTR_MASK(base)); // Address from target process
 	in.iov_len = sizeof(T); // Length
 
 	struct iovec out;
@@ -181,11 +205,11 @@ bool peekProc(PTR_TYPE base, T &dest) {
 	return (nread != -1 && static_cast<size_t>(nread) == in.iov_len);
 }
 
-static bool inline initialize(const std::multimap<std::wstring, unsigned long long int> &pids, std::wstring procname, std::wstring modname = NULL) {
+static bool inline initialize(const std::multimap<std::wstring, unsigned long long int> &pids, const wchar_t *procname, const wchar_t *modname = NULL) {
 	pModule = 0;
 
 	if (! pids.empty()) {
-		std::multimap<std::wstring, unsigned long long int>::const_iterator iter = pids.find(procname);
+		std::multimap<std::wstring, unsigned long long int>::const_iterator iter = pids.find(std::wstring(procname));
 
 		if (iter != pids.end())
 			pPid = static_cast<pid_t>(iter->second);
@@ -198,9 +222,7 @@ static bool inline initialize(const std::multimap<std::wstring, unsigned long lo
 	if (pPid == 0)
 		return false;
 
-	std::string procnameNonWide(procname.begin(), procname.end());
-	std::string modnameNonWide(modname.begin(), modname.end());
-	pModule = getModuleAddr((modnameNonWide.size() > 0) ? modnameNonWide : procnameNonWide);
+	pModule = getModuleAddr(modname ? modname : procname);
 
 	if (pModule == 0) {
 		pPid = 0;
