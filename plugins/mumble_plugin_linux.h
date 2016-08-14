@@ -23,6 +23,7 @@
 #include "mumble_plugin.h"
 
 typedef unsigned char BYTE;
+typedef unsigned char byte;
 
 pid_t pPid;
 static PTR_TYPE_CONCRETE pModule;
