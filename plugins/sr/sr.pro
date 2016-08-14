@@ -8,4 +8,4 @@ include(../plugins.pri)
 TARGET = sr
 linux:TARGET = mumble_paplugin_win32_sr
 SOURCES = sr.cpp
-LIBS += -luser32
+win32:LIBS += -luser32
