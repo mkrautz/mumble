@@ -22,6 +22,8 @@
 
 #include "mumble_plugin.h"
 
+typedef unsigned char BYTE;
+
 pid_t pPid;
 static PTR_TYPE_CONCRETE pModule;
 
@@ -185,7 +187,7 @@ bool peekProc(PTR_TYPE base, T &dest) {
 	in.iov_len = sizeof(T); // Length
 
 	struct iovec out;
-	out.iov_base = dest;
+	out.iov_base = &dest;
 	out.iov_len = sizeof(T);
 
 	ssize_t nread = process_vm_readv(pPid, &out, 1, &in, 1, 0);
