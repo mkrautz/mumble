@@ -42,6 +42,12 @@ procptr32_t vects_ptr;
 procptr32_t state_ptr;
 procptr32_t character_name_ptr_loc;
 
+typedef struct game_vects {
+	float front[3];
+	float top[3];
+	float position[3];
+} game_vects_t;
+
 static int fetch(float *avatar_pos, float *avatar_front, float *avatar_top, float *camera_pos, float *camera_front, float *camera_top, std::string &, std::wstring &identity)
 {
 	// Zero out the structures
@@ -59,14 +65,7 @@ static int fetch(float *avatar_pos, float *avatar_front, float *avatar_top, floa
 	if (state == 0)
 		return true; // This results in all vectors beeing zero which tells Mumble to ignore them.
 
-	struct
-	{
-		float front[3];
-		float top[3];
-		float position[3];
-	} game_vects;
-
-
+	game_vects_t game_vects;
 	ok = peekProc(vects_ptr, game_vects);
 	if (!ok) return false;
 
