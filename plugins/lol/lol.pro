@@ -5,6 +5,7 @@
 
 include(../plugins.pri)
 
-TARGET		= lol
-SOURCES		= lol.cpp
-LIBS		+= -luser32
+TARGET = lol
+linux:TARGET = mumble_paplugin_win32_lol
+SOURCES = lol.cpp
+win32:LIBS += -luser32

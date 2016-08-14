@@ -5,6 +5,7 @@
 
 include(../plugins.pri)
 
-TARGET		= gtaiv
-SOURCES		= gtaiv.cpp
-LIBS		+= -luser32
+TARGET = gtaiv
+linux:TARGET = mumble_paplugin_win32_gtaiv
+SOURCES = gtaiv.cpp
+win32:LIBS += -luser32

@@ -5,6 +5,7 @@
 
 include(../plugins.pri)
 
-TARGET		= blacklight
-SOURCES		= blacklight.cpp
-LIBS		+= -luser32
+TARGET = blacklight
+linux:TARGET = mumble_paplugin_win32_blacklight
+SOURCES = blacklight.cpp
+win32:LIBS += -luser32

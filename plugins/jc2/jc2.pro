@@ -5,6 +5,7 @@
 
 include(../plugins.pri)
 
-TARGET		= jc2
-SOURCES		= jc2.cpp
-LIBS		+= -luser32
+TARGET = jc2
+linux:TARGET = mumble_paplugin_win32_jc2
+SOURCES = jc2.cpp
+win32:LIBS += -luser32

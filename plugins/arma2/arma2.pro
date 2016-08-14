@@ -5,6 +5,7 @@
 
 include(../plugins.pri)
 
-TARGET		= arma2
-SOURCES		= arma2.cpp
-LIBS		+= -luser32
+TARGET = arma2
+linux:TARGET = mumble_paplugin_win32_arma2
+SOURCES = arma2.cpp
+win32:LIBS += -luser32

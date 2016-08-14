@@ -5,6 +5,7 @@
 
 include(../plugins.pri)
 
-TARGET		= etqw
-SOURCES		= etqw.cpp
-LIBS		+= -luser32
+TARGET = etqw
+linux:TARGET = mumble_paplugin_win32_etqw
+SOURCES = etqw.cpp
+win32:LIBS += -luser32

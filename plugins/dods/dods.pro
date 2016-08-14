@@ -5,7 +5,8 @@
 
 include(../plugins.pri)
 
-DEFINES		+= "NULL_DESC=\"L\\\"Day of Defeat : Source (Retracted, now using link)\\\"\""
-TARGET		= dods
-SOURCES		= ../null_plugin.cpp
-LIBS		+= -luser32
+DEFINES += "NULL_DESC=\"L\\\"Day of Defeat : Source (Retracted, now using link)\\\"\""
+TARGET = dods
+linux:TARGET = mumble_paplugin_win32_dods
+SOURCES = ../null_plugin.cpp
+win32:LIBS += -luser32

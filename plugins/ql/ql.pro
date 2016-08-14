@@ -5,6 +5,7 @@
 
 include(../plugins.pri)
 
-TARGET		= ql
-SOURCES		= ql.cpp
-LIBS		+= -luser32
+TARGET = ql
+linux:TARGET = mumble_paplugin_win32_ql
+SOURCES = ql.cpp
+win32:LIBS += -luser32

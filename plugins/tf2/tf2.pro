@@ -5,7 +5,8 @@
 
 include(../plugins.pri)
 
-DEFINES		+= "NULL_DESC=\"L\\\"Team Fortress 2 (Retracted, now using link)\\\"\""
-TARGET		= tf2
-SOURCES		= ../null_plugin.cpp
-LIBS		+= -luser32
+DEFINES += "NULL_DESC=\"L\\\"Team Fortress 2 (Retracted, now using link)\\\"\""
+TARGET = tf2
+linux:TARGET = mumble_paplugin_win32_tf2
+SOURCES = ../null_plugin.cpp
+win32:LIBS += -luser32

@@ -5,6 +5,7 @@
 
 include(../plugins.pri)
 
-TARGET		= sto
-SOURCES		= sto.cpp
-LIBS		+= -luser32
+TARGET = sto
+linux:TARGET = mumble_paplugin_win32_sto
+SOURCES = sto.cpp
+win32:LIBS += -luser32

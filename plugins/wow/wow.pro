@@ -5,6 +5,7 @@
 
 include(../plugins.pri)
 
-TARGET		= wow
-SOURCES		= wow.cpp
-LIBS		+= -luser32
+TARGET = wow
+linux:TARGET = mumble_paplugin_win32_wow
+SOURCES = wow.cpp
+win32:LIBS += -luser32

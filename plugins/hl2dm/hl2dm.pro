@@ -5,7 +5,8 @@
 
 include(../plugins.pri)
 
-DEFINES		+= "NULL_DESC=\"L\\\"Half Life 2 Death Match (Retracted, now using link)\\\"\""
-TARGET		= hl2dm
-SOURCES		= ../null_plugin.cpp
-LIBS		+= -luser32
+DEFINES += "NULL_DESC=\"L\\\"Half Life 2 Death Match (Retracted, now using link)\\\"\""
+TARGET = hl2dm
+linux:TARGET = mumble_paplugin_win32_hl2dm
+SOURCES = ../null_plugin.cpp
+win32:LIBS += -luser32

@@ -5,6 +5,7 @@
 
 include(../plugins.pri)
 
-TARGET		= gtav
-SOURCES		= gtav.cpp
-LIBS		+= -luser32
+TARGET = gtav
+linux:TARGET = mumble_paplugin_win32_gtav
+SOURCES = gtav.cpp
+win32:LIBS += -luser32

@@ -5,8 +5,7 @@
 
 include(../plugins.pri)
 
-TARGET		= aoc
-SOURCES		= aoc.cpp
-LIBS		+= -luser32
-
-
+TARGET = aoc
+linux:TARGET = mumble_paplugin_win32_aoc
+SOURCES = aoc.cpp
+win32:LIBS += -luser32

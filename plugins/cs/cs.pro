@@ -5,6 +5,7 @@
 
 include(../plugins.pri)
 
-TARGET		= cs
-SOURCES		= cs.cpp
-LIBS		+= -luser32
+TARGET = cs
+linux:TARGET = mumble_paplugin_win32_cs
+SOURCES = cs.cpp
+win32:LIBS += -luser32

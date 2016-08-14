@@ -5,6 +5,7 @@
 
 include(../plugins.pri)
 
-TARGET		= gmod
-SOURCES		= gmod.cpp
-LIBS		+= -luser32
+TARGET = gmod
+linux:TARGET = mumble_paplugin_win32_gmod
+SOURCES = gmod.cpp
+win32:LIBS += -luser32

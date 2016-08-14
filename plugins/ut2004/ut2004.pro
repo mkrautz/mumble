@@ -5,6 +5,7 @@
 
 include(../plugins.pri)
 
-TARGET		= ut2004
-SOURCES		= ut2004.cpp
-LIBS		+= -luser32
+TARGET = ut2004
+linux:TARGET = mumble_paplugin_win32_ut2004
+SOURCES = ut2004.cpp
+win32:LIBS += -luser32

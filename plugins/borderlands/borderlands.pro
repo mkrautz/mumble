@@ -5,6 +5,7 @@
 
 include(../plugins.pri)
 
-TARGET		= borderlands
-SOURCES		= borderlands.cpp
-LIBS		+= -luser32
+TARGET = borderlands
+linux:TARGET = mumble_paplugin_win32_borderlands
+SOURCES = borderlands.cpp
+win32:LIBS += -luser32

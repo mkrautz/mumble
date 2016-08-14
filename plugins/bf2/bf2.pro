@@ -5,6 +5,7 @@
 
 include(../plugins.pri)
 
-TARGET		= bf2
-SOURCES		= bf2.cpp
-LIBS		+= -luser32
+TARGET = bf2
+linux:TARGET= mumble_paplugin_win32_bf2
+SOURCES = bf2.cpp
+win32:LIBS += -luser32

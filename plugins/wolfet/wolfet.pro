@@ -5,6 +5,7 @@
 
 include(../plugins.pri)
 
-TARGET		= wolfet
-SOURCES		= wolfet.cpp
-LIBS		+= -luser32
+TARGET = wolfet
+linux:TARGET = mumble_paplugin_win32_wolfet
+SOURCES = wolfet.cpp
+win32:LIBS += -luser32

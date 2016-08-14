@@ -5,6 +5,7 @@
 
 include(../plugins.pri)
 
-TARGET		= codmw2so
-SOURCES		= codmw2so.cpp
-LIBS		+= -luser32
+TARGET = codmw2so
+linux:TARGET = mumble_paplugin_win32_codmw2so
+SOURCES = codmw2so.cpp
+win32:LIBS += -luser32

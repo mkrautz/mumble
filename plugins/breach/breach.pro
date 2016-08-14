@@ -5,7 +5,7 @@
 
 include(../plugins.pri)
 
-TARGET		= breach
-SOURCES		= breach.cpp
-LIBS		+= -luser32
-
+TARGET = breach
+linux:TARGET = mumble_paplugin_win32_breach
+SOURCES = breach.cpp
+win32:LIBS += -luser32

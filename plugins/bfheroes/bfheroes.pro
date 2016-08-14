@@ -5,6 +5,7 @@
 
 include(../plugins.pri)
 
-TARGET		= bfheroes
-SOURCES		= bfheroes.cpp
-LIBS		+= -luser32
+TARGET = bfheroes
+linux:TARGET = mumble_paplugin_win32_bfheroes
+SOURCES = bfheroes.cpp
+win32:LIBS += -luser32

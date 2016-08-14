@@ -5,6 +5,7 @@
 
 include(../plugins.pri)
 
-TARGET		= l4d
-SOURCES		= l4d.cpp
-LIBS		+= -luser32
+TARGET = l4d
+linux:TARGET = mumble_paplugin_win32_l4d
+SOURCES = l4d.cpp
+win32:LIBS += -luser32

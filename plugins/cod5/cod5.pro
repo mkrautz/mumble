@@ -5,6 +5,7 @@
 
 include(../plugins.pri)
 
-TARGET		= cod5
-SOURCES		= cod5.cpp
-LIBS		+= -luser32
+TARGET = cod5
+linux:TARGET = mumble_paplugin_win32_cod5
+SOURCES = cod5.cpp
+win32:LIBS += -luser32

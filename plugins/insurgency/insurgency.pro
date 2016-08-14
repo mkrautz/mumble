@@ -5,6 +5,7 @@
 
 include(../plugins.pri)
 
-TARGET		= insurgency
-SOURCES		= insurgency.cpp
-LIBS		+= -luser32
+TARGET = insurgency
+linux:TARGET = mumble_paplugin_win32_insurgency
+SOURCES = insurgency.cpp
+win32:LIBS += -luser32

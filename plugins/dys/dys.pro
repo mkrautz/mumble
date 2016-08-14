@@ -5,6 +5,7 @@
 
 include(../plugins.pri)
 
-TARGET		= dys
-SOURCES		= dys.cpp
-LIBS		+= -luser32
+TARGET = dys
+linux:TARGET = mumble_paplugin_win32_dys
+SOURCES = dys.cpp
+win32:LIBS += -luser32

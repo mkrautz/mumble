@@ -5,7 +5,7 @@
 
 include(../plugins.pri)
 
-TARGET		= lotro
-SOURCES		= lotro.cpp
-LIBS		+= -luser32
-CONFIG		+= qt
+TARGET = lotro
+linux:TARGET = mumble_paplugin_win32_lotro
+SOURCES = lotro.cpp
+win32:LIBS += -luser32
