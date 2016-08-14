@@ -14,5 +14,18 @@ win32 {
 }
 
 linux {
+	# Native
 	SUBDIRS += l4d2
+
+	# Win32
+	SUBDIRS += aoc arma2 bf1942 bf2 bf3 bf2142 bfbc2 bfheroes bf4 bf4_x86 borderlands borderlands2 breach cod2 cod4 cod5 codmw2 codmw2so cs css dods dys etqw tf2 gmod gtaiv gtav gw hl2dm insurgency jc2 l4d l4d2 lotro ql rl sr ut2004 ut3 wolfet
+
+	# Broken plugins on Linux:
+	# blacklight - uses _s string functions
+	# lol - uses _s string functions
+	# sto - c++11, windows multibyte, dword, etc.
+	# ut99 - windows multibyte
+	# wow - uses old-style header
+	# Also not built:
+	# l4d2 windows verison
 }
