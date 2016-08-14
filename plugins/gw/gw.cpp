@@ -164,9 +164,9 @@ static int fetch(float *avatar_pos, float *avatar_front, float *avatar_top, floa
 		prev_areaid = areaid;
 		prev_location = location;
 
-		char buffer[50];
-		sprintf_s(buffer, sizeof(buffer), "{\"instance\": \"%d:%d\"}", areaid, static_cast<int>(location));
-		context.assign(buffer);
+		std::ostringstream ocontext;
+		ocontext << "{\"instance\": \"" << areaid << ":" << static_cast<int>(location) << "\"}";
+		context = ocontext.str();
 	}
 	return true;
 }
