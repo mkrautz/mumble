@@ -40,7 +40,7 @@ static bool calcout(float *pos, float *rot, float *opos, float *front, float *to
 }
 
 static int trylock(const std::multimap<std::wstring, unsigned long long int> &pids) {
-	posptr = rotptr = NULL;
+	posptr = rotptr = 0;
 
 	if (! initialize(pids, L"left4dead.exe", L"client.dll"))
 		return false;

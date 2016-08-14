@@ -70,7 +70,7 @@ static int fetch(float *avatar_pos, float *avatar_front, float *avatar_top, floa
 }
 
 static int trylock(const std::multimap<std::wstring, unsigned long long int> &pids) {
-	identptr = contextptr = posptr = NULL;
+	identptr = contextptr = posptr = 0;
 
 	if (! initialize(pids, L"GameClient.exe"))
 		return false;

@@ -82,7 +82,7 @@ static int fetch(float *avatar_pos, float *avatar_front, float *avatar_top, floa
 }
 
 static int trylock(const std::multimap<std::wstring, unsigned long long int> &pids) {
-	faceptr = topptr = NULL;
+	faceptr = topptr = 0;
 
 	if (! initialize(pids, L"BF1942.exe"))
 		return false;
