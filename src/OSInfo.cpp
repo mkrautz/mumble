@@ -34,7 +34,10 @@ static QString regString(wchar_t *string, int size) {
 	// that the NUL is not included in the returned
 	// string.
 	const size_t adjustedSize = wcsnlen(string, static_cast<size_t>(size));
-	return QString::fromWCharArray(string, adjustedSize);
+	if (adjustedSize > INT_MAX) {
+		return QString();
+	}
+	return QString::fromWCharArray(string, static_cast<int>(adjustedSize));
 }
 
 /// Query for a Windows 10-style displayable version.
