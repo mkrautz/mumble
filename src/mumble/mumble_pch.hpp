@@ -82,6 +82,10 @@
 #define interface struct
 #endif
 
+// Allow writing to delayimp hooks (make then non-const).
+// Prior to MSVC2015.3 these were non-const.
+#define DELAYIMP_INSECURE_WRITABLE_HOOKS
+
 #include <windows.h>
 #include <shellapi.h>
 #include <winsock2.h>
