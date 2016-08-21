@@ -37,5 +37,5 @@ INCLUDEPATH *= "$$(DXSDK_DIR)\\include"
 
 QMAKE_LFLAGS *= "/LIBPATH:\"$$(VCINSTALLDIR)\\lib\\amd64\""
 QMAKE_LFLAGS *= "/LIBPATH:\"$$(VCINSTALLDIR)\\atlmfc\\lib\\amd64\""
-QMAKE_LFLAGS *= "/LIBPATH:\"$$(WindowsSdkDir)\\lib\\$$(WindowsSDKLibVersion)um\\x86\""
+QMAKE_LFLAGS *= "/LIBPATH:\"$$(WindowsSdkDir)\\lib\\$$(WindowsSDKLibVersion)um\\x64\""
 QMAKE_LFLAGS *= "/LIBPATH:\"$$(DXSDK_DIR)\\lib\\x64\""
