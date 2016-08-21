@@ -10,14 +10,14 @@ typedef long long wowuint64_t;
 #if _DEBUG
 #endif
 
-#include "../mumble_plugin_win32.h"
+#include "../mumble_plugin_win32_32bit.h"
 
 struct guid {
 	wowuint64_t first;
 	wowuint64_t second;
 };
 
-wowuint32_t p_playerBase;
+procptr32_t p_playerBase;
 guid g_playerGUID;
 
 /*
@@ -28,70 +28,36 @@ guid g_playerGUID;
  * call each value, to ease in upgrading. "[_]" means the value name may or may not
  * have an underscore in it depending on who's posting the offset.
  */
-static wowuint32_t ptr_ClientConnection=0xFF0248; // ClientConnection or CurMgrPointer
-static wowuint32_t off_ObjectManager=0x62C; // objectManager or CurMgrOffset
-static wowuint32_t ptr_WorldFrame=0xEAF1F0; // Camera[_]Pointer, CameraStruct
-static wowuint32_t off_CameraOffset=0x7610; // Camera[_]Offset
-static wowuint32_t ptr_PlayerName=0xFF0288; // PlayerName
-static wowuint32_t ptr_RealmName=0xFF0436; // RealmName
+static procptr32_t ptr_ClientConnection=0xFF0248; // ClientConnection or CurMgrPointer
+static procptr32_t off_ObjectManager=0x62C; // objectManager or CurMgrOffset
+static procptr32_t ptr_WorldFrame=0xEAF1F0; // Camera[_]Pointer, CameraStruct
+static procptr32_t off_CameraOffset=0x7610; // Camera[_]Offset
+static procptr32_t ptr_PlayerName=0xFF0288; // PlayerName
+static procptr32_t ptr_RealmName=0xFF0436; // RealmName
 
-static wowuint32_t off_localGUID = 0xF8; // localGUID
-static wowuint32_t off_firstObject = 0xD8; // firstObject
-static wowuint32_t off_nextObject = 0x3C; // nextObject
-static wowuint32_t off_objectGUID = 0x28;
+static procptr32_t off_localGUID = 0xF8; // localGUID
+static procptr32_t off_firstObject = 0xD8; // firstObject
+static procptr32_t off_nextObject = 0x3C; // nextObject
+static procptr32_t off_objectGUID = 0x28;
 
-static wowuint32_t off_unitpos = 0xAC0; // UnitOrigin
-static wowuint32_t off_unitheading = 0xAD0; // UnitAngle
-static wowuint32_t off_unitpitch = 0xAE0; // Not tracked, but probably off_unitheading + 0x10
+static procptr32_t off_unitpos = 0xAC0; // UnitOrigin
+static procptr32_t off_unitheading = 0xAD0; // UnitAngle
+static procptr32_t off_unitpitch = 0xAE0; // Not tracked, but probably off_unitheading + 0x10
 
-wowuint32_t getInt32(wowuint32_t ptr) {
-	wowuint32_t result;
-	SIZE_T r;
-	BOOL ok=ReadProcessMemory(hProcess, (void *)ptr, &result, sizeof(wowuint32_t), &r);
-	if (ok && (r == sizeof(wowuint32_t))) {
-		return result;
-	} else {
-		return 0xffffffff;
-	}
-}
-
-wowuint64_t getInt64(wowuint32_t ptr) {
-	wowuint64_t result;
-	SIZE_T r;
-	BOOL ok=ReadProcessMemory(hProcess, (void *)ptr, &result, sizeof(wowuint64_t), &r);
-	if (ok && (r == sizeof(wowuint64_t))) {
-		return result;
-	} else {
-		return 0xffffffffffffffff;
-	}
-}
-
-float getFloat(wowuint32_t ptr) {
-	float result;
-	SIZE_T r;
-	BOOL ok=ReadProcessMemory(hProcess, (void *)ptr, &result, sizeof(float), &r);
-	if (ok && (r == sizeof(float))) {
-		return result;
-	} else {
-		return (float)0xffffffff;
-	}
-}
-
-int getCStringN(wowuint32_t ptr, char *buffer, size_t buffersize) {
-	SIZE_T r;
-	BOOL ok = ReadProcessMemory(hProcess, (void *)ptr, buffer, buffersize, &r);
+int getCStringN(procptr32_t ptr, char *buffer, size_t buffersize) {
+	BOOL ok = peekProc(ptr, buffer, buffersize);
 
 	/* safety net, just in case we didn't get a string back at all */
 	buffer[buffersize-1] = '\0';
 
-	if (ok && (r == buffersize)) {
+	if (ok) {
 		return static_cast<int>(strlen(buffer));
 	} else {
 		return 0;
 	}
 }
 
-int getString(wowuint32_t ptr, std::string &buffer) {
+int getString(procptr32_t ptr, std::string &buffer) {
 	char buf[1024];
 	int bufLength;
 
@@ -101,7 +67,7 @@ int getString(wowuint32_t ptr, std::string &buffer) {
 	return bufLength;
 }
 
-int getWString(wowuint32_t ptr, std::wstring &buffer) {
+int getWString(procptr32_t ptr, std::wstring &buffer) {
 	char buf[1024];
 	int bufLength;
 	wchar_t wbuf[1024];
@@ -117,11 +83,10 @@ int getWString(wowuint32_t ptr, std::wstring &buffer) {
 }
 
 #ifdef _DEBUG
-void getDebug16(wowuint32_t ptr) {
+void getDebug16(procptr32_t ptr) {
 	unsigned char buf[16];
-	SIZE_T r;
-	BOOL ok=ReadProcessMemory(hProcess, (void *)ptr, &buf, sizeof(buf), &r);
-	if (ok && (r == sizeof(buf))) {
+	BOOL ok = peekProc(ptr, &buf, sizeof(buf));
+	if (ok) {
 		printf("%08x: %02x%02x%02x%02x %02x%02x%02x%02x %02x%02x%02x%02x %02x%02x%02x%02x\n",
 		       ptr,
 		       buf[0], buf[1], buf[2], buf[3],
@@ -144,32 +109,32 @@ void stringDebug(std::string &theString) {
 }
 #endif
 
-wowuint32_t getPlayerBase() {
-	wowuint32_t gClientConnection;
-	wowuint32_t sCurMgr;
-	wowuint32_t curObj;
+procptr32_t getPlayerBase() {
+	procptr32_t gClientConnection;
+	procptr32_t sCurMgr;
+	procptr32_t curObj;
 	guid playerGUID;
-	wowuint32_t playerBase;
+	procptr32_t playerBase;
 
-	wowuint32_t nextObj;
+	procptr32_t nextObj;
 	guid GUID;
 
 	playerBase=0;
 
-	gClientConnection=getInt32((wowuint32_t)pModule + ptr_ClientConnection);
-	sCurMgr=getInt32(gClientConnection + off_ObjectManager);
+	gClientConnection=peekProc<procptr32_t>(pModule + ptr_ClientConnection);
+	sCurMgr=peekProc<procptr32_t>(gClientConnection + off_ObjectManager);
 	if (sCurMgr != 0) {
-		playerGUID.first=getInt64(sCurMgr+off_localGUID);
-		playerGUID.second=getInt64(sCurMgr+off_localGUID + 0x8);
+		playerGUID.first=peekProc<wowuint64_t>(sCurMgr+off_localGUID);
+		playerGUID.second=peekProc<wowuint64_t>(sCurMgr+off_localGUID + 0x8);
 		if (playerGUID.second != 0) {
 			g_playerGUID.first = playerGUID.first;
 			g_playerGUID.second = playerGUID.second;
 
-			curObj=getInt32(sCurMgr+off_firstObject); // firstObject
+			curObj=peekProc<procptr32_t>(sCurMgr+off_firstObject); // firstObject
 			while (curObj != 0) {
-				nextObj=getInt32(curObj + off_nextObject); // nextObject
-				GUID.first=getInt64(curObj + off_objectGUID);
-				GUID.second=getInt64(curObj + off_objectGUID + 0x8);
+				nextObj=peekProc<procptr32_t>(curObj + off_nextObject); // nextObject
+				GUID.first=peekProc<wowuint64_t>(curObj + off_objectGUID);
+				GUID.second=peekProc<wowuint64_t>(curObj + off_objectGUID + 0x8);
 				if (playerGUID.first == GUID.first && playerGUID.second == GUID.second) {
 					playerBase = curObj;
 					break;
@@ -188,8 +153,8 @@ wowuint32_t getPlayerBase() {
 void getPlayerName(std::wstring &identity) {
 	std::wstring playerName, realmName;
 	
-	getWString((wowuint32_t)pModule + ptr_PlayerName, playerName);
-	getWString((wowuint32_t)pModule + ptr_RealmName, realmName);
+	getWString(pModule + ptr_PlayerName, playerName);
+	getWString(pModule + ptr_RealmName, realmName);
 	
 	identity = playerName + L"-" + realmName;
 	//printf("Name: %ls\n", identity.data());
@@ -200,10 +165,10 @@ void getCamera(float camera_pos[3], float camera_front[3], float camera_top[3]) 
 	wowuint32_t ptr1, ptr2;
 	float buf[4][3];
 
-	ptr1 = getInt32((wowuint32_t)pModule + ptr_WorldFrame);
-	ptr2 = getInt32(ptr1+off_CameraOffset);
+	ptr1 = peekProc<procptr32_t>(pModule + ptr_WorldFrame);
+	ptr2 = peekProc<procptr32_t>(ptr1+off_CameraOffset);
 
-	peekProc((BYTE *) ptr2+0x08, buf, sizeof(buf));
+	peekProc(ptr2+0x08, buf, sizeof(buf));
 
 	/* camera postition */
 	camera_pos[0] = -buf[0][1];
@@ -272,8 +237,8 @@ static int fetch(float *avatar_pos, float *avatar_front, float *avatar_top, floa
 
 	/* are we still looking at the right object? */
 	guid peekGUID, tempGUID;
-	peekGUID.first=getInt64(p_playerBase+0x30);
-	peekGUID.second=getInt64(p_playerBase+0x30+0x8);
+	peekGUID.first=peekProc<wowuint64_t>(p_playerBase+0x30);
+	peekGUID.second=peekProc<wowuint64_t>(p_playerBase+0x30+0x8);
 	if (g_playerGUID.first != peekGUID.first || g_playerGUID.second != peekGUID.second) {
 		/* no? Try to resynch to the new address. Happens when walking through portals quickly (aka no or short loading screen) */
 		tempGUID.first = g_playerGUID.first;
@@ -283,8 +248,8 @@ static int fetch(float *avatar_pos, float *avatar_front, float *avatar_top, floa
 			/* GUID of actor changed, likely a character and/or realm change */
 			wow.refresh();
 		}
-		peekGUID.first=getInt64(p_playerBase+0x28);
-		peekGUID.second=getInt64(p_playerBase+0x28+0x8);
+		peekGUID.first=peekProc<wowuint64_t>(p_playerBase+0x28);
+		peekGUID.second=peekProc<wowuint64_t>(p_playerBase+0x28+0x8);
 		if (g_playerGUID.first != peekGUID.first || g_playerGUID.second != peekGUID.second) {
 			/* no? we are still getting the expected GUID for our avatar, but we don't have it's current position */
 			return true;
@@ -305,7 +270,7 @@ static int fetch(float *avatar_pos, float *avatar_front, float *avatar_top, floa
 	// ... which isn't a right-hand coordinate system.
 
 	float pos[3];
-	ok = ok && peekProc((BYTE *) p_playerBase + off_unitpos, pos, sizeof(float)*3);
+	ok = ok && peekProc(p_playerBase + off_unitpos, pos, sizeof(float)*3);
 	if (! ok) {
 		if (g_playerGUID.second == 0xffffffffffffffff) {
 			return false;
@@ -325,12 +290,12 @@ static int fetch(float *avatar_pos, float *avatar_front, float *avatar_top, floa
 	avatar_pos[2] = pos[0];
 
 	float heading=0.0;
-	ok = ok && peekProc((BYTE *) p_playerBase + off_unitheading, &heading, sizeof(heading));
+	ok = ok && peekProc(p_playerBase + off_unitheading, &heading, sizeof(heading));
 	if (! ok)
 		return false;
 
 	float pitch=0.0;
-	ok = ok && peekProc((BYTE *) p_playerBase + off_unitpitch, &pitch, sizeof(pitch));
+	ok = ok && peekProc(p_playerBase + off_unitpitch, &pitch, sizeof(pitch));
 	if (! ok)
 		return false;
 
