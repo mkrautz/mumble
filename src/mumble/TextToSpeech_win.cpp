@@ -8,7 +8,19 @@
 #include "TextToSpeech.h"
 
 #include <servprov.h>
-#include <sapi.h>
+
+#define SPF_ASYNC 1
+
+extern "C" {
+	extern const IID IID_ISpVoice;
+	extern const CLSID CLSID_SpVoice;
+}
+
+MIDL_INTERFACE("6C44DF74-72B9-4992-A1EC-EF996E0422D4")
+ISpVoice : public IUnknown {
+	virtual HRESULT STDMETHODCALLTYPE Speak(LPCWSTR pwcs, DWORD dwFlags, ULONG *pulStreamNumber) = 0;
+	virtual HRESULT STDMETHODCALLTYPE SetVolume(USHORT usVolume) = 0;
+};
 
 #undef FAILED
 #define FAILED(Status) (static_cast<HRESULT>(Status)<0)
@@ -25,7 +37,7 @@ class TextToSpeechPrivate {
 TextToSpeechPrivate::TextToSpeechPrivate() {
 	pVoice = NULL;
 
-	HRESULT hr = CoCreateInstance(CLSID_SpVoice, NULL, CLSCTX_ALL, IID_ISpVoice, (void **)&pVoice);
+	HRESULT hr = CoCreateInstance(CLSID_SpVoice, NULL, CLSCTX_ALL, IID_ISpVoice, reinterpret_cast<void **>(&pVoice));
 	if (FAILED(hr))
 		qWarning("TextToSpeechPrivate: Failed to allocate TTS Voice");
 }
