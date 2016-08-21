@@ -19,6 +19,7 @@
 #include <math.h>
 #include <sstream>
 #include <iostream>
+#include <stdint.h>
 
 #include "mumble_plugin.h"
 
@@ -57,7 +58,8 @@ static inline PTR_TYPE_CONCRETE getModuleAddr(DWORD pid, const wchar_t *modname)
 
 		while (ok) {
 			if (wcscmp(me.szModule, modname)==0) {
-				addr = reinterpret_cast<PTR_TYPE_CONCRETE>(me.modBaseAddr);
+				uintptr_t myaddr = reinterpret_cast<uintptr_t>(me.modBaseAddr);
+				addr = static_cast<PTR_TYPE_CONCRETE>(myaddr);
 				break;
 			}
 			ok = Module32Next(hSnap, &me);
@@ -73,14 +75,16 @@ static inline PTR_TYPE_CONCRETE getModuleAddr(const wchar_t *modname) {
 
 static inline bool peekProc(PTR_TYPE base, VOID *dest, SIZE_T len) {
 	SIZE_T r;
-	BOOL ok=ReadProcessMemory(hProcess, reinterpret_cast<VOID *>(base), dest, len, &r);
+	uintptr_t myaddr = static_cast<uintptr_t>(base);
+	BOOL ok=ReadProcessMemory(hProcess, reinterpret_cast<VOID *>(myaddr), dest, len, &r);
 	return (ok && (r == len));
 }
 
 template<class T>
 bool peekProc(PTR_TYPE base, T &dest) {
 	SIZE_T r;
-	BOOL ok=ReadProcessMemory(hProcess, reinterpret_cast<VOID *>(base), reinterpret_cast<VOID *>(& dest), sizeof(T), &r);
+	uintptr_t myaddr = static_cast<uintptr_t>(base);
+	BOOL ok=ReadProcessMemory(hProcess, reinterpret_cast<VOID *>(myaddr), reinterpret_cast<VOID *>(& dest), sizeof(T), &r);
 	return (ok && (r == sizeof(T)));
 }
 
