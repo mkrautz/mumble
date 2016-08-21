@@ -4,8 +4,8 @@
 // Mumble source tree or at <https://www.mumble.info/LICENSE>.
 
 /* stdint.h */
-typedef int uint32_t;
-typedef long long uint64_t;
+typedef int wowuint32_t;
+typedef long long wowuint64_t;
 
 #if _DEBUG
 #endif
@@ -13,11 +13,11 @@ typedef long long uint64_t;
 #include "../mumble_plugin_win32.h"
 
 struct guid {
-	uint64_t first;
-	uint64_t second;
+	wowuint64_t first;
+	wowuint64_t second;
 };
 
-uint32_t p_playerBase;
+wowuint32_t p_playerBase;
 guid g_playerGUID;
 
 /*
@@ -28,45 +28,45 @@ guid g_playerGUID;
  * call each value, to ease in upgrading. "[_]" means the value name may or may not
  * have an underscore in it depending on who's posting the offset.
  */
-static uint32_t ptr_ClientConnection=0xFF0248; // ClientConnection or CurMgrPointer
-static uint32_t off_ObjectManager=0x62C; // objectManager or CurMgrOffset
-static uint32_t ptr_WorldFrame=0xEAF1F0; // Camera[_]Pointer, CameraStruct
-static uint32_t off_CameraOffset=0x7610; // Camera[_]Offset
-static uint32_t ptr_PlayerName=0xFF0288; // PlayerName
-static uint32_t ptr_RealmName=0xFF0436; // RealmName
+static wowuint32_t ptr_ClientConnection=0xFF0248; // ClientConnection or CurMgrPointer
+static wowuint32_t off_ObjectManager=0x62C; // objectManager or CurMgrOffset
+static wowuint32_t ptr_WorldFrame=0xEAF1F0; // Camera[_]Pointer, CameraStruct
+static wowuint32_t off_CameraOffset=0x7610; // Camera[_]Offset
+static wowuint32_t ptr_PlayerName=0xFF0288; // PlayerName
+static wowuint32_t ptr_RealmName=0xFF0436; // RealmName
 
-static uint32_t off_localGUID = 0xF8; // localGUID
-static uint32_t off_firstObject = 0xD8; // firstObject
-static uint32_t off_nextObject = 0x3C; // nextObject
-static uint32_t off_objectGUID = 0x28;
+static wowuint32_t off_localGUID = 0xF8; // localGUID
+static wowuint32_t off_firstObject = 0xD8; // firstObject
+static wowuint32_t off_nextObject = 0x3C; // nextObject
+static wowuint32_t off_objectGUID = 0x28;
 
-static uint32_t off_unitpos = 0xAC0; // UnitOrigin
-static uint32_t off_unitheading = 0xAD0; // UnitAngle
-static uint32_t off_unitpitch = 0xAE0; // Not tracked, but probably off_unitheading + 0x10
+static wowuint32_t off_unitpos = 0xAC0; // UnitOrigin
+static wowuint32_t off_unitheading = 0xAD0; // UnitAngle
+static wowuint32_t off_unitpitch = 0xAE0; // Not tracked, but probably off_unitheading + 0x10
 
-uint32_t getInt32(uint32_t ptr) {
-	uint32_t result;
+wowuint32_t getInt32(wowuint32_t ptr) {
+	wowuint32_t result;
 	SIZE_T r;
-	BOOL ok=ReadProcessMemory(hProcess, (void *)ptr, &result, sizeof(uint32_t), &r);
-	if (ok && (r == sizeof(uint32_t))) {
+	BOOL ok=ReadProcessMemory(hProcess, (void *)ptr, &result, sizeof(wowuint32_t), &r);
+	if (ok && (r == sizeof(wowuint32_t))) {
 		return result;
 	} else {
 		return 0xffffffff;
 	}
 }
 
-uint64_t getInt64(uint32_t ptr) {
-	uint64_t result;
+wowuint64_t getInt64(wowuint32_t ptr) {
+	wowuint64_t result;
 	SIZE_T r;
-	BOOL ok=ReadProcessMemory(hProcess, (void *)ptr, &result, sizeof(uint64_t), &r);
-	if (ok && (r == sizeof(uint64_t))) {
+	BOOL ok=ReadProcessMemory(hProcess, (void *)ptr, &result, sizeof(wowuint64_t), &r);
+	if (ok && (r == sizeof(wowuint64_t))) {
 		return result;
 	} else {
 		return 0xffffffffffffffff;
 	}
 }
 
-float getFloat(uint32_t ptr) {
+float getFloat(wowuint32_t ptr) {
 	float result;
 	SIZE_T r;
 	BOOL ok=ReadProcessMemory(hProcess, (void *)ptr, &result, sizeof(float), &r);
@@ -77,7 +77,7 @@ float getFloat(uint32_t ptr) {
 	}
 }
 
-int getCStringN(uint32_t ptr, char *buffer, size_t buffersize) {
+int getCStringN(wowuint32_t ptr, char *buffer, size_t buffersize) {
 	SIZE_T r;
 	BOOL ok = ReadProcessMemory(hProcess, (void *)ptr, buffer, buffersize, &r);
 
@@ -91,7 +91,7 @@ int getCStringN(uint32_t ptr, char *buffer, size_t buffersize) {
 	}
 }
 
-int getString(uint32_t ptr, std::string &buffer) {
+int getString(wowuint32_t ptr, std::string &buffer) {
 	char buf[1024];
 	int bufLength;
 
@@ -101,7 +101,7 @@ int getString(uint32_t ptr, std::string &buffer) {
 	return bufLength;
 }
 
-int getWString(uint32_t ptr, std::wstring &buffer) {
+int getWString(wowuint32_t ptr, std::wstring &buffer) {
 	char buf[1024];
 	int bufLength;
 	wchar_t wbuf[1024];
@@ -117,7 +117,7 @@ int getWString(uint32_t ptr, std::wstring &buffer) {
 }
 
 #ifdef _DEBUG
-void getDebug16(uint32_t ptr) {
+void getDebug16(wowuint32_t ptr) {
 	unsigned char buf[16];
 	SIZE_T r;
 	BOOL ok=ReadProcessMemory(hProcess, (void *)ptr, &buf, sizeof(buf), &r);
@@ -144,19 +144,19 @@ void stringDebug(std::string &theString) {
 }
 #endif
 
-uint32_t getPlayerBase() {
-	uint32_t gClientConnection;
-	uint32_t sCurMgr;
-	uint32_t curObj;
+wowuint32_t getPlayerBase() {
+	wowuint32_t gClientConnection;
+	wowuint32_t sCurMgr;
+	wowuint32_t curObj;
 	guid playerGUID;
-	uint32_t playerBase;
+	wowuint32_t playerBase;
 
-	uint32_t nextObj;
+	wowuint32_t nextObj;
 	guid GUID;
 
 	playerBase=0;
 
-	gClientConnection=getInt32((uint32_t)pModule + ptr_ClientConnection);
+	gClientConnection=getInt32((wowuint32_t)pModule + ptr_ClientConnection);
 	sCurMgr=getInt32(gClientConnection + off_ObjectManager);
 	if (sCurMgr != 0) {
 		playerGUID.first=getInt64(sCurMgr+off_localGUID);
@@ -188,8 +188,8 @@ uint32_t getPlayerBase() {
 void getPlayerName(std::wstring &identity) {
 	std::wstring playerName, realmName;
 	
-	getWString((uint32_t)pModule + ptr_PlayerName, playerName);
-	getWString((uint32_t)pModule + ptr_RealmName, realmName);
+	getWString((wowuint32_t)pModule + ptr_PlayerName, playerName);
+	getWString((wowuint32_t)pModule + ptr_RealmName, realmName);
 	
 	identity = playerName + L"-" + realmName;
 	//printf("Name: %ls\n", identity.data());
@@ -197,10 +197,10 @@ void getPlayerName(std::wstring &identity) {
 }
 
 void getCamera(float camera_pos[3], float camera_front[3], float camera_top[3]) {
-	uint32_t ptr1, ptr2;
+	wowuint32_t ptr1, ptr2;
 	float buf[4][3];
 
-	ptr1 = getInt32((uint32_t)pModule + ptr_WorldFrame);
+	ptr1 = getInt32((wowuint32_t)pModule + ptr_WorldFrame);
 	ptr2 = getInt32(ptr1+off_CameraOffset);
 
 	peekProc((BYTE *) ptr2+0x08, buf, sizeof(buf));
@@ -233,7 +233,7 @@ typedef class WowData {
 		bool nameAvatarValid;
 
 		guid playerGUID;
-		uint32_t pointerPlayerObject;
+		wowuint32_t pointerPlayerObject;
 
 	public:
 		WowData::WowData() {
