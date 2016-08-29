@@ -444,7 +444,9 @@ QString OSInfo::getOSDisplayableVersion() {
 	}
 
 	// Service Packs (may be empty)
+#ifdef _MSC_VER
 	static_assert(sizeof(TCHAR) == sizeof(wchar_t), "Expected Unicode TCHAR.");
+#endif
 	QString sp = QString::fromWCharArray(ovi.szCSDVersion);
 	if (!sp.isEmpty()) {
 		osdispver.append(QLatin1String(" "));

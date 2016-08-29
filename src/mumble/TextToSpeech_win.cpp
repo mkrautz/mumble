@@ -7,15 +7,14 @@
 
 #include "TextToSpeech.h"
 
-#include <servprov.h>
-#include <sapi.h>
+//#include <servprov.h>
+//#include <sapi.h>
 
 #undef FAILED
 #define FAILED(Status) (static_cast<HRESULT>(Status)<0)
 
 class TextToSpeechPrivate {
 	public:
-		ISpVoice * pVoice;
 		TextToSpeechPrivate();
 		~TextToSpeechPrivate();
 		void say(const QString &text);
@@ -23,27 +22,35 @@ class TextToSpeechPrivate {
 };
 
 TextToSpeechPrivate::TextToSpeechPrivate() {
+#ifdef _MSC_VER
 	pVoice = NULL;
 
 	HRESULT hr = CoCreateInstance(CLSID_SpVoice, NULL, CLSCTX_ALL, IID_ISpVoice, (void **)&pVoice);
 	if (FAILED(hr))
 		qWarning("TextToSpeechPrivate: Failed to allocate TTS Voice");
+#endif
 }
 
 TextToSpeechPrivate::~TextToSpeechPrivate() {
+#ifdef _MSC_VER
 	if (pVoice)
 		pVoice->Release();
+#endif
 }
 
 void TextToSpeechPrivate::say(const QString &text) {
+#ifdef _MSC_VER
 	if (pVoice) {
 		pVoice->Speak((const wchar_t *) text.utf16(), SPF_ASYNC, NULL);
 	}
+#endif
 }
 
 void TextToSpeechPrivate::setVolume(int volume) {
+#ifdef _MSC_VER
 	if (pVoice)
 		pVoice->SetVolume(volume);
+#endif
 }
 
 TextToSpeech::TextToSpeech(QObject *p) : QObject(p) {

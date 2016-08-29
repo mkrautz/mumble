@@ -95,6 +95,10 @@
 #include <psapi.h>
 #include <math.h>
 
+#ifdef __MINGW32__
+#include <ws2tcpip.h>
+#endif
+
 #define STACKVAR(type, varname, count) type *varname=reinterpret_cast<type *>(_alloca(sizeof(type) * (count)))
 
 #else // ifndef Q_OS_WIN

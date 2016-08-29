@@ -58,7 +58,7 @@ extern void os_init();
 extern char *os_lang;
 
 #if defined(Q_OS_WIN) && !defined(QT_NO_DEBUG)
-extern "C" _declspec(dllexport) int main(int argc, char **argv) {
+extern "C" __declspec(dllexport) int main(int argc, char **argv) {
 #else
 int main(int argc, char **argv) {
 #endif
@@ -608,7 +608,7 @@ int main(int argc, char **argv) {
 #if defined(Q_OS_WIN) && defined(QT_NO_DEBUG)
 extern void qWinMain(HINSTANCE, HINSTANCE, LPSTR, int, int &, QVector<char *> &);
 
-extern "C" _declspec(dllexport) int MumbleMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdArg, int cmdShow) {
+extern "C" __declspec(dllexport) int MumbleMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdArg, int cmdShow) {
 	Q_UNUSED(cmdArg);
 
 	QByteArray cmdParam = QString::fromWCharArray(GetCommandLine()).toLocal8Bit();
