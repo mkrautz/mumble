@@ -25,7 +25,11 @@ QMAKE_RESOURCE_FLAGS += -compress 9
 # we define MUMBLE_ARCH to be used in its place.
 MUMBLE_ARCH = $$QMAKE_TARGET.arch
 
-win32 {
+win32-g++ {
+	DEFINES *= RESTRICT=__restrict__
+}
+
+win32-msvc {
 	# Define the CONFIG options 'force-x86-toolchain' and
 	# 'force-x86_64-toolchain'. These can be used to force
 	# the target of a .pro file to be built for a specific

@@ -29,7 +29,7 @@ ServerHandlerMessageEvent::ServerHandlerMessageEvent(const QByteArray &msg, unsi
 	bFlush = flush;
 }
 
-#ifdef Q_OS_WIN
+#if defined(Q_OS_WIN) && defined(_MSC_VER)
 static HANDLE loadQoS() {
 	HANDLE hQoS = NULL;
 
@@ -99,7 +99,7 @@ ServerHandler::ServerHandler() {
 		qWarning("ServerHandler: TLS cipher preference is \"%s\"", qPrintable(pref.join(QLatin1String(":"))));
 	}
 
-#ifdef Q_OS_WIN
+#if defined(Q_OS_WIN) && defined(_MSC_VER)
 	hQoS = loadQoS();
 	if (hQoS)
 		Connection::setQoS(hQoS);
@@ -109,7 +109,7 @@ ServerHandler::ServerHandler() {
 ServerHandler::~ServerHandler() {
 	wait();
 	cConnection.reset();
-#ifdef Q_OS_WIN
+#if defined(Q_OS_WIN) && defined(_MSC_VER)
 	if (hQoS) {
 		QOSCloseHandle(hQoS);
 		Connection::setQoS(NULL);
@@ -315,7 +315,7 @@ void ServerHandler::run() {
 	if (qusUdp) {
 		QMutexLocker qml(&qmUdp);
 
-#ifdef Q_OS_WIN
+#if defined(Q_OS_WIN) && defined(_MSC_VER)
 		if (hQoS != NULL) {
 			if (! QOSRemoveSocketFromFlow(hQoS, 0, dwFlowUDP, 0))
 				qWarning("ServerHandler: Failed to remove UDP from QoS");
@@ -636,7 +636,7 @@ void ServerHandler::serverConnectionConnected() {
 				}
 			}
 #endif
-#elif defined(Q_OS_WIN)
+#elif defined(Q_OS_WIN) && defined(_MSC_VER)
 			if (hQoS != NULL) {
 				struct sockaddr_in addr;
 				memset(&addr, 0, sizeof(addr));

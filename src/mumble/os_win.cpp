@@ -150,6 +150,7 @@ BOOL SetHeapOptions() {
 	return fRet;
 }
 
+#ifdef _MSC_VER
 FARPROC WINAPI delayHook(unsigned dliNotify, PDelayLoadInfo pdli) {
 	if (dliNotify != dliNotePreLoadLibrary)
 		return 0;
@@ -201,6 +202,7 @@ FARPROC WINAPI delayHook(unsigned dliNotify, PDelayLoadInfo pdli) {
 }
 
 decltype(__pfnDliNotifyHook2) __pfnDliNotifyHook2 = delayHook;
+#endif
 
 void os_init() {
 	__cpuid(cpuinfo, 1);
@@ -230,8 +232,10 @@ void os_init() {
 	}
 #endif
 
+#ifdef _MSC_VER
 	unsigned int currentControl = 0;
 	_controlfp_s(&currentControl, _DN_FLUSH, _MCW_DN);
+#endif
 
 	SetHeapOptions();
 	enableCrashOnCrashes();
@@ -244,7 +248,7 @@ void os_init() {
 
 #ifdef QT_NO_DEBUG
 	QString console = g.qdBasePath.filePath(QLatin1String("Console.txt"));
-	fConsole = _wfsopen(console.toStdWString().c_str(), L"a+", _SH_DENYWR);
+	fConsole = _wfsopen(console.toStdWString().c_str(), L"a+", 0); // XXX: denywr
 
 	if (fConsole) {
 #if QT_VERSION >= 0x050000
@@ -285,8 +289,10 @@ void os_init() {
 #endif
 
 	g.qdBasePath.mkpath(QLatin1String("Snapshots"));
+#ifdef _MSC_VER
 	if (bIsWin7)
 		SetCurrentProcessExplicitAppUserModelID(L"net.sourceforge.mumble.Mumble");
+#endif
 }
 
 DWORD WinVerifySslCert(const QByteArray& cert) {

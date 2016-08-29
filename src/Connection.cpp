@@ -18,7 +18,7 @@
 #include "Mumble.pb.h"
 
 
-#ifdef Q_OS_WIN
+#if defined(Q_OS_WIN) && defined(_MSC_VER)
 HANDLE Connection::hQoS = NULL;
 #endif
 
@@ -48,7 +48,7 @@ Connection::Connection(QObject *p, QSslSocket *qtsSock) : QObject(p) {
 }
 
 Connection::~Connection() {
-#ifdef Q_OS_WIN
+#if defined(Q_OS_WIN) && defined(_MSC_VER)
 	if (dwFlow && hQoS) {
 		if (! QOSRemoveSocketFromFlow(hQoS, 0, dwFlow, 0))
 			qWarning("Connection: Failed to remove flow from QoS");
@@ -57,7 +57,7 @@ Connection::~Connection() {
 }
 
 void Connection::setToS() {
-#if defined(Q_OS_WIN)
+#if defined(Q_OS_WIN) && defined(_MSC_VER)
 	if (dwFlow || ! hQoS)
 		return;
 

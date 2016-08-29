@@ -72,7 +72,9 @@ void TaskList::addToRecentList(QString name, QString user, QString host, int por
 		goto cleanup;
 	}
 
+#if _MSC_VER
 	SHAddToRecentDocs(SHARD_LINK, link);
+#endif
 
 cleanup:
 	if (ps)
