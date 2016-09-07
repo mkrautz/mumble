@@ -14,6 +14,7 @@
 extern bool bIsWin7;
 
 void TaskList::addToRecentList(QString name, QString user, QString host, int port) {
+#ifdef _MSC_VER
 	if (! bIsWin7)
 		return;
 
@@ -81,4 +82,5 @@ cleanup:
 		ps->Release();
 	if (link)
 		link->Release();
+#endif
 }
