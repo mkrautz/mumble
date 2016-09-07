@@ -27,6 +27,7 @@ MUMBLE_ARCH = $$QMAKE_TARGET.arch
 
 win32-g++ {
 	DEFINES *= RESTRICT=__restrict__
+	QMAKE_LIBDIR *= /usr/x86_64-w64-mingw32/sys-root/mingw/lib/
 }
 
 win32-msvc {

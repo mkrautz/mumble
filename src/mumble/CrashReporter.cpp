@@ -148,10 +148,10 @@ void CrashReporter::run() {
 			QString app = QLatin1String("dxdiag.exe");
 			wchar_t *sr = NULL;
 			size_t srsize = 0;
-			if (_wdupenv_s(&sr, &srsize, L"SystemRoot") == 0) {
-				app = QDir::fromNativeSeparators(QString::fromWCharArray(sr)) + QLatin1String("/System32/dxdiag.exe");
-				free(sr);
-			}
+			//if (_wdupenv_s(&sr, &srsize, L"SystemRoot") == 0) {
+			//	app = QDir::fromNativeSeparators(QString::fromWCharArray(sr)) + QLatin1String("/System32/dxdiag.exe");
+			//	free(sr);
+			//}
 
 			qp.start(app, qsl);
 			if (qp.waitForFinished(30000)) {

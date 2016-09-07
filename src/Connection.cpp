@@ -251,6 +251,8 @@ QString Connection::sessionProtocolString() const {
 
 #ifdef Q_OS_WIN
 void Connection::setQoS(HANDLE hParentQoS) {
+# ifdef _MSC_VER
 	hQoS = hParentQoS;
+# endif
 }
 #endif
