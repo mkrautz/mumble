@@ -109,6 +109,13 @@ win32 {
 		QMAKE_CXXFLAGS_RELEASE *= -arch:SSE
 	}
 
+	# Ignore C4091 to allow C-style "typedef struct"
+	# definitions.
+	# This is needed to use the Win7.1 (XP-compatible)
+	# SDK with MSVC2015.
+	QMAKE_CFLAGS *= /wd4091
+	QMAKE_CXXFLAGS *= /wd4091
+
 	# Qt 5.4 uses -Zc:strictStrings by default on MSVS 2013.
 	# TextToSpeech_win.cpp uses sapi.h, which isn't compatible
 	# with the strictStrings option due to bad conversions
