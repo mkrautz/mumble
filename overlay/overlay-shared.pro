@@ -48,12 +48,7 @@ CONFIG(debug, debug|release) {
   DEFINES *= DEBUG
 }
 
-# Override fxc binary for the x86 build.
-CONFIG(force-x86-toolchain) {
-  FXC = "\"$$(DXSDK_DIR)\\Utilities\\bin\\x86\\fxc.exe\""
-} else {
-  FXC = fxc.exe
-}
+FXC = fxc.exe
 
 fxc.output = ${QMAKE_FILE_BASE}.hex
 fxc.commands = $${FXC} /Tfx_4_0 /O3 /Fh${QMAKE_FILE_OUT} ${QMAKE_FILE_NAME}
