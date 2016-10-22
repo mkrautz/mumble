@@ -248,10 +248,10 @@ unix {
 		}
 	} else {
 		# If C++11 support hasn't been explicitly enabled,
-		# force C++03 mode. If we don't do this, newer
+		# force C++98/C++03 mode. If we don't do this, newer
 		# compilers (such as G++ 6) will default to C++11
 		# without us being aware.
-		QMAKE_CXXFLAGS *= -std=c++03
+		QMAKE_CXXFLAGS *= -std=c++98
 	}
 }
 
