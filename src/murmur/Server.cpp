@@ -818,7 +818,8 @@ void Server::run() {
 						continue;
 					}
 				} else {
-					// Unknown peer
+					// Unknown peer. First, try finding the user that sent
+					// the message by using qHostUsers.
 					foreach(ServerUser *usr, qhHostUsers.value(ha)) {
 						if (checkDecrypt(usr, encrypt, buffer, len)) { // checkDecrypt takes the User's qrwlCrypt lock.
 							// Every time we relock, reverify users' existance.
@@ -840,7 +841,31 @@ void Server::run() {
 							break;
 						}
 					}
-					if (! u) {
+					// We still haven't found a user. Now, try decrypting the message
+					// against all connected users. This is probably too expensive...
+					if (u == NULL) {
+						foreach (ServerUser *usr, qhUsers) {
+							if (checkDecrypt(usr, encrypt, buffer, len)) { // checkDecrypt takes the User's qrwlCrypt lock.
+								// Every time we relock, reverify users' existance.
+								// The main thread might delete the user while the lock isn't held.
+								unsigned int uiSession = usr->uiSession;
+								rl.unlock();
+								qrwlVoiceThread.lockForWrite();
+								if (qhUsers.contains(uiSession)) {
+									u = usr;
+									u->sUdpSocket = sock;
+									memcpy(& u->saiUdpAddress, &from, sizeof(from));
+								}
+								qrwlVoiceThread.unlock();
+								rl.relock();
+								if (u != NULL && !qhUsers.contains(uiSession))
+									u = NULL;
+								break;
+							}
+						}
+					}
+					// Still no user found. Skip.
+					if (u == NULL) {
 						continue;
 					}
 				}
