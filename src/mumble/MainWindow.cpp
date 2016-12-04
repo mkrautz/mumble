@@ -20,6 +20,8 @@
 #include "Connection.h"
 #include "ConnectDialog.h"
 #include "Database.h"
+#include "LogEmitter.h"
+#include "DeveloperConsole.h"
 #include "Global.h"
 #include "GlobalShortcut.h"
 #include "Log.h"
@@ -2386,6 +2388,10 @@ void MainWindow::on_qaAudioWizard_triggered() {
 	AudioWizard *aw = new AudioWizard(this);
 	aw->exec();
 	delete aw;
+}
+
+void MainWindow::on_qaDeveloperConsole_triggered() {
+	g.c->show();
 }
 
 void MainWindow::on_qaHelpWhatsThis_triggered() {
