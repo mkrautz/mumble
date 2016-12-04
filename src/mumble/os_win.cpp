@@ -13,6 +13,7 @@
 
 #include "Global.h"
 #include "Version.h"
+#include "LogEmitter.h"
 
 extern "C" {
 	void __cpuid(int a[4], int b);
@@ -49,9 +50,12 @@ static void mumbleMessageOutputQString(QtMsgType type, const QString &msg) {
 		default:
 			c='X';
 	}
-	fprintf(fConsole, "<%c>%s %s\n", c, qPrintable(QDateTime::currentDateTime().toString(QLatin1String("yyyy-MM-dd hh:mm:ss.zzz"))), qPrintable(msg));
+	QString date = QDateTime::currentDateTime().toString(QLatin1String("yyyy-MM-dd hh:mm:ss.zzz"));
+	QString fmsg = QString::fromLatin1("<%1>%2 %3").arg(c).arg(date).arg(msg);
+	fprintf(fConsole, "%s\n", qPrintable(fmsg));
 	fflush(fConsole);
-	OutputDebugStringA(qPrintable(msg));
+	OutputDebugStringA(qPrintable(fmsg));
+	g.le->addLogEntry(fmsg);
 	if (type == QtFatalMsg) {
 		::MessageBoxA(NULL, qPrintable(msg), "Mumble", MB_OK | MB_ICONERROR);
 		exit(0);
