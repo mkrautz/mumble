@@ -8,17 +8,25 @@
 
 #include <QtCore/QStringList>
 #include <QtCore/QObject>
+# include <QtCore/QPointer>
+#if QT_VERSION >= 0x050000
+# include <QtWidgets/QMainWindow>
+#else
+# include <QtGui/QMainWindow>
+#endif
 
 class DeveloperConsole : public QObject {
 	private:
 		Q_OBJECT
 		Q_DISABLE_COPY(DeveloperConsole);
 	protected:
+		QPointer<QMainWindow> m_window;
 		QStringList m_logEntries;
 	public slots:
 		void addLogMessage(const QString &);
 	public:
 		DeveloperConsole(QObject *parent = NULL);
+		~DeveloperConsole();
 		void show();
 };
 

@@ -16,20 +16,30 @@ DeveloperConsole::DeveloperConsole(QObject *parent)
 	connect(g.le.data(), SIGNAL(newLogEntry(const QString &)), this, SLOT(addLogMessage(const QString &)));
 }
 
+DeveloperConsole::~DeveloperConsole() {
+	QMainWindow *mw = m_window.data();
+	m_window.clear();
+	delete mw;
+}
+
 void DeveloperConsole::show() {
-	QMainWindow *mw = new QMainWindow();
-	mw->setAttribute(Qt::WA_DeleteOnClose);
-	QTextBrowser *tb = new QTextBrowser();
-	mw->resize(675, 300);
-	mw->setCentralWidget(tb);
-	mw->setWindowTitle(tr("Developer Console"));
+	if (m_window.isNull()) {
+		QMainWindow *mw = new QMainWindow();
+		mw->setAttribute(Qt::WA_DeleteOnClose);
+		QTextBrowser *tb = new QTextBrowser();
+		mw->resize(675, 300);
+		mw->setCentralWidget(tb);
+		mw->setWindowTitle(tr("Developer Console"));
 
-	connect(g.le.data(), SIGNAL(newLogEntry(const QString &)), tb, SLOT(append(const QString &)));
+		connect(g.le.data(), SIGNAL(newLogEntry(const QString &)), tb, SLOT(append(const QString &)));
 
-	foreach(const QString &m, m_logEntries)
-		tb->append(m);
+		foreach(const QString &m, m_logEntries)
+			tb->append(m);
+		m_window = QPointer<QMainWindow>(mw);
+	}
 
-	mw->show();
+	m_window.data()->show();
+	m_window.data()->activateWindow();
 }
 
 void DeveloperConsole::addLogMessage(const QString &msg) {
