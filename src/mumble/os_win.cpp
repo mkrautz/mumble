@@ -28,6 +28,8 @@ static FILE *fConsole = NULL;
 static wchar_t wcComment[PATH_MAX] = L"";
 static MINIDUMP_USER_STREAM musComment;
 
+static QSharedPointer<LogEmitter> le;
+
 static int cpuinfo[4];
 
 bool bIsWin7 = false;
@@ -55,7 +57,7 @@ static void mumbleMessageOutputQString(QtMsgType type, const QString &msg) {
 	fprintf(fConsole, "%s\n", qPrintable(fmsg));
 	fflush(fConsole);
 	OutputDebugStringA(qPrintable(fmsg));
-	g.le->addLogEntry(fmsg);
+	le->addLogEntry(fmsg);
 	if (type == QtFatalMsg) {
 		::MessageBoxA(NULL, qPrintable(msg), "Mumble", MB_OK | MB_ICONERROR);
 		exit(0);
@@ -234,6 +236,11 @@ void os_init() {
 	SetHeapOptions();
 	enableCrashOnCrashes();
 	mumble_speex_init();
+
+	// Make a copy of the global LogEmitter, such that
+	// os_win.cpp doesn't have to consider the deletion
+	// of the Global object and its LogEmitter object.
+	le = g.le;
 
 #ifdef QT_NO_DEBUG
 	QString console = g.qdBasePath.filePath(QLatin1String("Console.txt"));

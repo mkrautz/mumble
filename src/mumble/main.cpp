@@ -106,7 +106,7 @@ int main(int argc, char **argv) {
 
 	qsrand(QDateTime::currentDateTime().toTime_t());
 
-	g.le = new LogEmitter();
+	g.le = QSharedPointer<LogEmitter>(new LogEmitter());
 	g.c = new DeveloperConsole();
 
 #if defined(Q_OS_WIN) || defined(Q_OS_MAC)
@@ -566,7 +566,7 @@ int main(int argc, char **argv) {
 	delete g.o;
 
 	delete g.c;
-	delete g.le;
+	g.le.clear();
 
 	DeferInit::run_destroyers();
 

@@ -53,7 +53,7 @@ public:
 	LCD *lcd;
 	BonjourClient *bc;
 	QNetworkAccessManager *nam;
-	LogEmitter *le;
+	QSharedPointer<LogEmitter> le;
 	DeveloperConsole *c;
 	int iPushToTalk;
 	Timer tDoublePush;

@@ -13,7 +13,7 @@
 DeveloperConsole::DeveloperConsole(QObject *parent)
 	: QObject(parent)  {
 
-	connect(g.le, SIGNAL(newLogEntry(const QString &)), this, SLOT(addLogMessage(const QString &)));
+	connect(g.le.data(), SIGNAL(newLogEntry(const QString &)), this, SLOT(addLogMessage(const QString &)));
 }
 
 void DeveloperConsole::show() {
@@ -24,7 +24,7 @@ void DeveloperConsole::show() {
 	mw->setCentralWidget(tb);
 	mw->setWindowTitle(tr("Developer Console"));
 
-	connect(g.le, SIGNAL(newLogEntry(const QString &)), tb, SLOT(append(const QString &)));
+	connect(g.le.data(), SIGNAL(newLogEntry(const QString &)), tb, SLOT(append(const QString &)));
 
 	foreach(const QString &m, m_logEntries)
 		tb->append(m);
