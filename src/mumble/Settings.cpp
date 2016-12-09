@@ -346,6 +346,7 @@ Settings::Settings() {
 	usProxyPort = 0;
 	iMaxInFlightTCPPings = 2;
 	bUdpForceTcpAddr = true;
+	bEnableDNSSRVRecords = true;
 
 	iMaxImageSize = ciDefaultMaxImageSize;
 	iMaxImageWidth = 1024; // Allow 1024x1024 resolution
@@ -671,6 +672,7 @@ void Settings::load(QSettings* settings_ptr) {
 	SAVELOAD(qsServicePrefix, "net/serviceprefix");
 	SAVELOAD(iMaxInFlightTCPPings, "net/maxinflighttcppings");
 	SAVELOAD(bUdpForceTcpAddr, "net/udpforcetcpaddr");
+	SAVELOAD(bEnableDNSSRVRecords, "net/dns/srv");
 
 	// Network settings - SSL
 	SAVELOAD(qsSslCiphers, "net/sslciphers");
@@ -985,6 +987,7 @@ void Settings::save() {
 	SAVELOAD(qsServicePrefix, "net/serviceprefix");
 	SAVELOAD(iMaxInFlightTCPPings, "net/maxinflighttcppings");
 	SAVELOAD(bUdpForceTcpAddr, "net/udpforcetcpaddr");
+	SAVELOAD(bEnableDNSSRVRecords, "net/dns/srv");
 
 	// Network settings - SSL
 	SAVELOAD(qsSslCiphers, "net/sslciphers");

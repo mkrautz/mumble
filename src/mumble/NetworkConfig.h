@@ -22,6 +22,7 @@ class NetworkConfig : public ConfigWidget, Ui::NetworkConfig {
 		virtual QString title() const Q_DECL_OVERRIDE;
 		virtual QIcon icon() const Q_DECL_OVERRIDE;
 		static void SetupProxy();
+		static bool EnableDNSSRVRecords();
 		static bool TcpModeEnabled();
 	public slots:
 		void accept() const Q_DECL_OVERRIDE;

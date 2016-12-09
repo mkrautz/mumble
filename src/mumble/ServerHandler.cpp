@@ -22,6 +22,8 @@
 #include "SSL.h"
 #include "User.h"
 #include "Net.h"
+#include "ServerResolver.h"
+#include "Log.h"
 
 ServerHandlerMessageEvent::ServerHandlerMessageEvent(const QByteArray &msg, unsigned int mtype, bool flush) : QEvent(static_cast<QEvent::Type>(SERVERSEND_EVENT)) {
 	qbaMsg = msg;
@@ -70,6 +72,11 @@ ServerHandler::ServerHandler() {
 	tConnectionTimeoutTimer = NULL;
 	uiVersion = 0;
 	iInFlightTCPPings = 0;
+
+	qtsSock = NULL;
+
+	srResolver = new ServerResolver(this);
+	connect(srResolver, SIGNAL(resolved()), this, SLOT(serverConnectionBegin()));
 
 	// Historically, the qWarning line below initialized OpenSSL for us.
 	// It used to have this comment:
@@ -255,7 +262,7 @@ void ServerHandler::sendProtoMessage(const ::google::protobuf::Message &msg, uns
 void ServerHandler::run() {
 	qbaDigest = QByteArray();
 	bStrong = true;
-	QSslSocket *qtsSock = new QSslSocket(this);
+	qtsSock = new QSslSocket(this);
 
 	if (! g.s.bSuppressIdentity && CertWizard::validateCert(g.s.kpCertificate)) {
 		qtsSock->setPrivateKey(g.s.kpCertificate.second);
@@ -292,6 +299,9 @@ void ServerHandler::run() {
 #else
 	qtsSock->setProtocol(QSsl::TlsV1);
 #endif
+
+
+
 	qtsSock->connectToHostEncrypted(qsHostName, usPort);
 
 	tTimestamp.restart();
@@ -528,6 +538,14 @@ void ServerHandler::serverConnectionTimeoutOnConnect() {
 	if (connection)
 		connection->disconnectSocket(true);
 
+	if (!srResolver->isEmpty()) {
+		g.l->log(Log::Information, tr("Connection timed out. Trying next available server."));
+
+		QPair<QString, quint16> target = srResolver->pop();
+		qtsSock->connectToHostEncrypted(target.first, target.second);
+		return;
+	}
+
 	serverConnectionClosed(QAbstractSocket::SocketTimeoutError, tr("Connection timed out"));
 }
 
@@ -539,6 +557,10 @@ void ServerHandler::serverConnectionStateChanged(QAbstractSocket::SocketState st
 		tConnectionTimeoutTimer->setSingleShot(true);
 		tConnectionTimeoutTimer->start(30000);
 	}
+}
+
+void ServerHandler::serverConnectionBegin() {
+
 }
 
 void ServerHandler::serverConnectionConnected() {
