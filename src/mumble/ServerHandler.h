@@ -37,7 +37,9 @@ class Connection;
 class Message;
 class PacketDataStream;
 class QUdpSocket;
+class QSslSocket;
 class VoiceRecorder;
+class ServerResolver;
 
 class ServerHandlerMessageEvent : public QEvent {
 	public:
@@ -82,6 +84,8 @@ class ServerHandler : public QThread {
 		ConnectionPtr cConnection;
 		QByteArray qbaDigest;
 		boost::shared_ptr<VoiceRecorder> recorder;
+		QSslSocket *qtsSock;
+		ServerResolver *srResolver;
 
 		unsigned int uiVersion;
 		QString qsRelease;
@@ -134,6 +138,7 @@ class ServerHandler : public QThread {
 		void connected();
 	protected slots:
 		void message(unsigned int, const QByteArray &);
+		void serverConnectionBegin();
 		void serverConnectionConnected();
 		void serverConnectionTimeoutOnConnect();
 		void serverConnectionStateChanged(QAbstractSocket::SocketState);

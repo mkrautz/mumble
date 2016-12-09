@@ -113,6 +113,10 @@ void NetworkConfig::SetupProxy() {
 	QNetworkProxy::setApplicationProxy(proxy);
 }
 
+bool NetworkConfig::EnableDNSSRVRecords() {
+	return g.s.bEnableDNSSRVRecords && g.s.ptProxyType != Settings::NoProxy;
+}
+
 bool NetworkConfig::TcpModeEnabled() {
 	/*
 	 * We force TCP mode for both HTTP and SOCKS5 proxies, even though SOCKS5 supports UDP.

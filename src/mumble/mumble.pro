@@ -130,7 +130,8 @@ HEADERS *= BanEditor.h \
     Themes.h \
     OverlayPositionableItem.h \
     widgets/MUComboBox.h \
-    DeveloperConsole.h
+    DeveloperConsole.h \
+    ServerResolver.h
 
 SOURCES *= BanEditor.cpp \
     ACLEditor.cpp \
@@ -197,6 +198,12 @@ SOURCES *= BanEditor.cpp \
     OverlayPositionableItem.cpp \
     widgets/MUComboBox.cpp \
     DeveloperConsole.cpp
+
+greaterThan(QT_VERSION, 4) {
+  SOURCES *= ServerResolver_qt5.cpp
+} else {
+  SOURCES *= ServerResolver_nosrv.cpp
+}
 
 DIST		*= ../../icons/mumble.ico ../../icons/mumble.xpm murmur_pch.h mumble.plist
 RESOURCES	*= mumble.qrc mumble_translations.qrc ../../themes/MumbleTheme.qrc

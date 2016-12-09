@@ -294,6 +294,11 @@ struct Settings {
 	/// socket to the same address as its TCP
 	/// connection is using.
 	bool bUdpForceTcpAddr;
+	/// bUseDNSSRVRecords enables support for SRV records
+	/// in Mumble. Mumble will try to resolve a hostname's
+	/// SRV record, and connect to all of the listed servers
+	/// in sequence until one of them succeeds.
+	bool bEnableDNSSRVRecords;
 
 	/// iMaxInFlightTCPPings specifies the maximum
 	/// number of ping messages that the client has
