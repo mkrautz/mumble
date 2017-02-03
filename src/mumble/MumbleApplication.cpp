@@ -56,25 +56,20 @@ bool MumbleApplication::event(QEvent *e) {
 
 #ifdef Q_OS_WIN
 # if QT_VERSION >= 0x050000
-bool MumbleApplication::nativeEventFilter(const QByteArray &eventType, void *message, long *result) {
+bool MumbleApplication::nativeEventFilter(const QByteArray &eventType, void *message, long *) {
 	Q_UNUSED(eventType);
 	MSG *msg = reinterpret_cast<MSG *>(message);
 
-	if (QThread::currentThread() == thread()) {
-		if (Global::g_global_struct && g.ocIntercept) {
-			switch (msg->message) {
-				case WM_MOUSELEAVE:
-					*result = 0;
-					return true;
-				case WM_KEYDOWN:
-				case WM_KEYUP:
-				case WM_SYSKEYDOWN:
-				case WM_SYSKEYUP:
-					GlobalShortcutEngine::engine->prepareInput();
-				default:
-					break;
-			}
-		}
+	switch (msg->message) {
+		case WM_KEYDOWN:
+		case WM_KEYUP:
+		case WM_SYSKEYDOWN:
+		case WM_SYSKEYUP:
+			QList l;
+			l << WM_KEYDOWN;
+			GlobalShortcutEngine::engine->forwardEvent(QVariant());
+		default:
+			break;
 	}
 	return false;
 }
@@ -83,9 +78,6 @@ bool MumbleApplication::winEventFilter(MSG *msg, long *result) {
 	if (QThread::currentThread() == thread()) {
 		if (Global::g_global_struct && g.ocIntercept) {
 			switch (msg->message) {
-				case WM_MOUSELEAVE:
-					*result = 0;
-					return true;
 				case WM_KEYDOWN:
 				case WM_KEYUP:
 				case WM_SYSKEYDOWN:

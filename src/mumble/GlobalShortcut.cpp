@@ -931,6 +931,9 @@ QString GlobalShortcutEngine::buttonText(const QList<QVariant> &list) {
 void GlobalShortcutEngine::prepareInput() {
 }
 
+void GlobalShortcutEngine::forwardEvent(QVariant) {
+}
+
 GlobalShortcut::GlobalShortcut(QObject *p, int index, QString qsName, bool expert, QVariant def) : QObject(p) {
 	idx = index;
 	name=qsName;

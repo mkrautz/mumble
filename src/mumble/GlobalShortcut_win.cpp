@@ -19,6 +19,19 @@
 
 #define DX_SAMPLE_BUFFER_SIZE 512
 
+#define FORWARD_INPUT_QEVENT (QEvent::User + 961)
+
+class ForwardInputEvent : public QEvent {
+		Q_DISABLE_COPY(ForwardInputEvent);
+public:
+		QVariant v;
+		ForwardInputEvent(QVariant v);
+};
+
+ForwardInputEvent::ForwardInputEvent(QVariant _v) : QEvent(static_cast<QEvent::Type>(FORWARD_INPUT_QEVENT)) {
+	v = _v;
+}
+
 // from os_win.cpp
 extern HWND mumble_mw_hwnd;
 
@@ -66,6 +79,14 @@ GlobalShortcutWin::GlobalShortcutWin()
 GlobalShortcutWin::~GlobalShortcutWin() {
 	quit();
 	wait();
+}
+
+bool GlobalShortcutWin::event(QEvent *ev) {
+	if (ev->type() == FORWARD_INPUT_QEVENT) {
+			qWarning("gotcha forward event from thread %lu", QThread::currentThreadId());
+			return true;
+	}
+	return QObject::event(ev);
 }
 
 void GlobalShortcutWin::run() {
@@ -148,10 +169,10 @@ void GlobalShortcutWin::run() {
 	pDI->Release();
 }
 
+static void handleKeyboard(GlobalShortcutWin *gsw, )
+
 LRESULT CALLBACK GlobalShortcutWin::HookKeyboard(int nCode, WPARAM wParam, LPARAM lParam) {
 	GlobalShortcutWin *gsw=static_cast<GlobalShortcutWin *>(engine);
-	KBDLLHOOKSTRUCT *key=reinterpret_cast<KBDLLHOOKSTRUCT *>(lParam);
-	BYTE *ucKeyState = gsw->ucKeyState;
 
 #ifndef QT_NO_DEBUG
 	static int safety = 0;
@@ -160,6 +181,11 @@ LRESULT CALLBACK GlobalShortcutWin::HookKeyboard(int nCode, WPARAM wParam, LPARA
 #else
 	if (nCode >= 0) {
 #endif
+		KBDLLHOOKSTRUCT *key=reinterpret_cast<KBDLLHOOKSTRUCT *>(lParam);
+		BYTE *ucKeyState = gsw->ucKeyState;
+
+		qWarning("HookKeyboard: vkCode = %lu", static_cast<unsigned long>(key->vkCode));
+
 		UINT msg = wParam;
 		WPARAM w = key->vkCode;
 		LPARAM l = 1 | (key->scanCode << 16);
@@ -601,6 +627,7 @@ void GlobalShortcutWin::timeTicked() {
 			quint32 uiType = id->qhOfsToType.value(rgdod[j].dwOfs);
 			ql << uiType;
 			ql << id->vguid;
+			qWarning("DirectInput: type = %lu (%s)", static_cast<unsigned long>(uiType), qPrintable(id->qhNames.value(uiType)));
 			handleButton(ql, rgdod[j].dwData & 0x80);
 		}
 	}
@@ -819,4 +846,8 @@ bool GlobalShortcutWin::canSuppress() {
 
 void GlobalShortcutWin::prepareInput() {
 	SetKeyboardState(ucKeyState);
+}
+
+void GlobalShortcutWin::forwardEvent(QVariant v) {
+	QApplication::postEvent(this, new ForwardInputEvent(v));
 }

@@ -93,7 +93,10 @@ class GlobalShortcutWin : public GlobalShortcutEngine {
 		void unacquire();
 		QString buttonName(const QVariant &) Q_DECL_OVERRIDE;
 
+		bool event(QEvent *e) Q_DECL_OVERRIDE;
+
 		virtual void prepareInput() Q_DECL_OVERRIDE;
+		virtual void forwardEvent(QVariant v) Q_DECL_OVERRIDE;
 };
 
 uint qHash(const GUID &);
