@@ -562,8 +562,8 @@ bool MetaParams::reloadCertificateSettings() {
 	updatedSettings.setIniCodec("UTF-8");
 #endif
 
-	QString qsCiphers = MumbleSSL::defaultOpenSSLCipherString();
-	qsCiphers = typeCheckedFromSettings("sslCiphers", qsCiphers, &updatedSettings);
+	QString tmpCiphers = MumbleSSL::defaultOpenSSLCipherString();
+	qsCiphers = typeCheckedFromSettings("sslCiphers", tmpCiphers, &updatedSettings);
 
 	QString qsSSLCert = updatedSettings.value("sslCert").toString();
 	QString qsSSLKey = updatedSettings.value("sslKey").toString();
@@ -677,9 +677,9 @@ bool MetaParams::reloadCertificateSettings() {
 #endif
 
 	{
-		QList<QSslCipher> ciphers = MumbleSSL::ciphersFromOpenSSLCipherString(qsCiphers);
+		QList<QSslCipher> ciphers = MumbleSSL::ciphersFromOpenSSLCipherString(tmpCiphers);
 		if (ciphers.isEmpty()) {
-			qFatal("Invalid sslCiphers option. Either the cipher string is invalid or none of the ciphers are available: \"%s\"", qPrintable(qsCiphers));
+			qFatal("Invalid sslCiphers option. Either the cipher string is invalid or none of the ciphers are available: \"%s\"", qPrintable(tmpCiphers));
 		}
 
 		// If the version of Qt we're building against doesn't support
@@ -715,7 +715,7 @@ bool MetaParams::reloadCertificateSettings() {
 	qscCert = tmpCert;
 	qskKey = tmpKey;
 	qbaDHParams = tmpDHParams;
-	this->qsCiphers = qsCiphers;
+	qsCiphers = tmpCiphers;
 
 	qmConfig.insert(QLatin1String("certificate"), qscCert.toPem());
 	qmConfig.insert(QLatin1String("key"), qskKey.toPem());
