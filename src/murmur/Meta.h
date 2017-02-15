@@ -109,11 +109,24 @@ public:
 	QVariant qvSuggestPositional;
 	QVariant qvSuggestPushToTalk;
 
+	/// qsAbsSettingsFn is the absolute path to
+	/// the murmur.ini used by this Meta instance.
+	QString qsAbsSettingsFn;
 	QSettings *qsSettings;
+
+	/// If bInitialized is true, the MetaParams has
+	/// been initialied and is ready for use.
+	bool bInitialized;
 
 	MetaParams();
 	~MetaParams();
 	void read(QString fname = QString("murmur.ini"));
+
+	/// Attempt to load SSL settings from murmur.ini.
+	/// Returns true if successful. Returns false if
+	/// the operation failed. On failure, the MetaParams
+	/// object is left 100% intact.
+	bool loadSSLSettings();
 
 private:
 	template <class T>
@@ -138,6 +151,13 @@ class Meta : public QObject {
 
 		Meta();
 		~Meta();
+
+		/// updateCertificates updates Murmur's MetaParams's
+		/// certifiacte info, and re-initializes the certificate
+		/// settings for any virtual servers that use the Meta
+		/// server's certificate configuration.
+		bool updateCertificates();
+
 		void bootAll();
 		bool boot(int);
 		bool banCheck(const QHostAddress &);

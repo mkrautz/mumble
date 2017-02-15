@@ -228,7 +228,9 @@ void UnixMurmur::handleSigUsr1() {
 	ssize_t len = ::read(iUsr1Fd[1], &tmp, sizeof(tmp));
 	Q_UNUSED(len);
 
-	qWarning("Reloading certificates...");
+	if (meta) {
+		meta->updateCertificates();
+	}
 
 	qsnUsr1->setEnabled(true);
 }
