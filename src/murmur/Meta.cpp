@@ -161,7 +161,7 @@ void MetaParams::read(QString fname) {
 		if (fname.isEmpty()) {
 			QDir::root().mkpath(qdBasePath.absolutePath());
 			qdBasePath = QDir(datapaths.at(0));
-			fname = qdBasePath.absolutePath() + QLatin1String("/murmur.ini");
+			qsAbsSettingsFn = qdBasePath.absolutePath() + QLatin1String("/murmur.ini");
 		}
 	} else {
 		QFile f(fname);
@@ -169,11 +169,11 @@ void MetaParams::read(QString fname) {
 			qFatal("Specified ini file %s could not be opened", qPrintable(fname));
 		}
 		qdBasePath = QFileInfo(f).absoluteDir();
-		fname = QFileInfo(f).absoluteFilePath();
+		qsAbsSettingsFn = QFileInfo(f).absoluteFilePath();
 		f.close();
 	}
 	QDir::setCurrent(qdBasePath.absolutePath());
-	qsSettings = new QSettings(fname, QSettings::IniFormat);
+	qsSettings = new QSettings(qsAbsSettingsFn, QSettings::IniFormat);
 #if QT_VERSION >= 0x040500
 	qsSettings->setIniCodec("UTF-8");
 #endif
@@ -546,6 +546,98 @@ void MetaParams::read(QString fname) {
 	qmConfig.insert(QLatin1String("channelnestinglimit"), QString::number(iChannelNestingLimit));
 	qmConfig.insert(QLatin1String("sslCiphers"), qsCiphers);
 	qmConfig.insert(QLatin1String("sslDHParams"), QString::fromLatin1(qbaDHParams.constData()));
+
+	bInitialized = true;
+}
+
+void MetaParams::reload() {
+	if (! bInitialized) {
+		qCritical("MetaParams: attempt to reload an uninitialized MetaParams object");
+		return;
+	}
+
+	qWarning("MetaParams: reloading certificate-related settings from '%s'", qPrintable(qsAbsSettingsFn));
+
+	QSettings updatedSettings(qsAbsSettingsFn, QSettings::IniFormat);
+#if QT_VERSION >= 0x040500
+	updatedSettings.setIniCodec("UTF-8");
+#endif
+
+	QString qsSSLCert = updatedSettings.value("sslCert").toString();
+	QString qsSSLKey = updatedSettings.value("sslKey").toString();
+	QString qsSSLCA = updatedSettings.value("sslCA").toString();
+
+	qbaPassPhrase = updatedSettings.value("sslPassPhrase").toByteArray();
+
+	if (! qsSSLCA.isEmpty()) {
+		QFile pem(qsSSLCA);
+		if (pem.open(QIODevice::ReadOnly)) {
+			QByteArray qba = pem.readAll();
+			pem.close();
+			QList<QSslCertificate> ql = QSslCertificate::fromData(qba);
+			if (ql.isEmpty()) {
+				qCritical("MetaParams: Failed to parse any CA certificates from %s", qPrintable(qsSSLCA));
+			} else {
+				QSslSocket::addDefaultCaCertificates(ql);
+			}
+		} else {
+			qCritical("MetaParams: Failed to read %s", qPrintable(qsSSLCA));
+		}
+	}
+
+	QByteArray crt, key;
+
+	if (! qsSSLCert.isEmpty()) {
+		QFile pem(qsSSLCert);
+		if (pem.open(QIODevice::ReadOnly)) {
+			crt = pem.readAll();
+			pem.close();
+		} else {
+			qCritical("MetaParams: Failed to read %s", qPrintable(qsSSLCert));
+		}
+	}
+	if (! qsSSLKey.isEmpty()) {
+		QFile pem(qsSSLKey);
+		if (pem.open(QIODevice::ReadOnly)) {
+			key = pem.readAll();
+			pem.close();
+		} else {
+			qCritical("MetaParams: Failed to read %s", qPrintable(qsSSLKey));
+		}
+	}
+
+	if (! key.isEmpty() || ! crt.isEmpty()) {
+		if (! key.isEmpty()) {
+			qskKey = Server::privateKeyFromPEM(key, qbaPassPhrase);
+		}
+		if (qskKey.isNull() && ! crt.isEmpty()) {
+			qskKey = Server::privateKeyFromPEM(crt, qbaPassPhrase);
+			if (! qskKey.isNull())
+				qCritical("MetaParams: Using private key found in certificate file.");
+		}
+		if (qskKey.isNull())
+			qFatal("MetaParams: No private key found in certificate or key file.");
+
+		QList<QSslCertificate> ql = QSslCertificate::fromData(crt);
+		ql << QSslCertificate::fromData(key);
+		for (int i=0;i<ql.size(); ++i) {
+			const QSslCertificate &c = ql.at(i);
+			if (Server::isKeyForCert(qskKey, c)) {
+				qscCert = c;
+				ql.removeAt(i);
+				break;
+			}
+		}
+		if (qscCert.isNull()) {
+			qFatal("MetaParams: Failed to find certificate matching private key.");
+		}
+		if (ql.size() > 0) {
+			QSslSocket::addDefaultCaCertificates(ql);
+			qCritical("MetaParams: Adding %d CA certificates from certificate file.", ql.size());
+		}
+	}
+
+	qWarning("MetaParams: certificate information reloaded");
 }
 
 Meta::Meta() {
@@ -576,6 +668,14 @@ Meta::~Meta() {
 		Connection::setQoS(NULL);
 	}
 #endif
+}
+
+void Meta::updateCertificates() {
+	Meta::mp.reload();
+	foreach (Server *s, qhServers) {
+		s->log("Reloading certificates...");
+		s->initializeCert();
+	}
 }
 
 void Meta::getOSInfo() {
