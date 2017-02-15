@@ -1562,7 +1562,7 @@ static void impl_Server_updateCertificate(const ::Murmur::AMD_Server_updateCerti
 
 	// Ensure that the private key is usable with the given
 	// certificate.
-	if (!::Server::isKeyForCert(cert, privKey)) {
+	if (!::Server::isKeyForCert(privKey, cert)) {
 		ERR_clear_error();
 		cb->ice_exception(InvalidInputDataException());
 		return;
