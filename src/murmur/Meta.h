@@ -109,11 +109,19 @@ public:
 	QVariant qvSuggestPositional;
 	QVariant qvSuggestPushToTalk;
 
+	/// qsAbsSettingsFn is the absolute path to
+	/// the murmur.ini used by this Meta instance.
+	QString qsAbsSettingsFn;
 	QSettings *qsSettings;
+
+	/// If bInitialized is true, the MetaParams has
+	/// been initialied and is ready for use.
+	bool bInitialized;
 
 	MetaParams();
 	~MetaParams();
 	void read(QString fname = QString("murmur.ini"));
+	void reload();
 
 private:
 	template <class T>
@@ -138,6 +146,7 @@ class Meta : public QObject {
 
 		Meta();
 		~Meta();
+		void updateCertificates();
 		void bootAll();
 		bool boot(int);
 		bool banCheck(const QHostAddress &);
