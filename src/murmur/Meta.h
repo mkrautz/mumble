@@ -121,7 +121,13 @@ public:
 	MetaParams();
 	~MetaParams();
 	void read(QString fname = QString("murmur.ini"));
-	void reload();
+
+	/// Attempt to reload certificate settings from
+	/// murmur.ini.
+	/// Returns true if successful. Returns false if
+	/// the operation failed. On failure, the MetaParams
+	/// object is left 100% intact.
+	bool reloadCertificateSettings();
 
 private:
 	template <class T>
@@ -146,7 +152,13 @@ class Meta : public QObject {
 
 		Meta();
 		~Meta();
-		void updateCertificates();
+
+		/// updateCertificates updates Murmur's MetaParams's
+		/// certifiacte info, and re-initializes the certificate
+		/// settings for any virtual servers that use the Meta
+		/// server's certificate configuration.
+		bool updateCertificates();
+
 		void bootAll();
 		bool boot(int);
 		bool banCheck(const QHostAddress &);
