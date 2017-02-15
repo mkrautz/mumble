@@ -542,10 +542,10 @@ void MetaParams::read(QString fname) {
 	bInitialized = true;
 }
 
-void MetaParams::reload() {
+bool MetaParams::reloadCertificateSettings() {
 	if (! bInitialized) {
 		qCritical("MetaParams: attempt to reload an uninitialized MetaParams object");
-		return;
+		return false;
 	}
 
 	qWarning("MetaParams: reloading certificate-related settings from '%s'", qPrintable(qsAbsSettingsFn));
@@ -574,6 +574,7 @@ void MetaParams::reload() {
 			}
 		} else {
 			qCritical("MetaParams: Failed to read %s", qPrintable(qsSSLCA));
+			return false;
 		}
 	}
 
@@ -586,6 +587,7 @@ void MetaParams::reload() {
 			pem.close();
 		} else {
 			qCritical("MetaParams: Failed to read %s", qPrintable(qsSSLCert));
+			return false;
 		}
 	}
 	if (! qsSSLKey.isEmpty()) {
@@ -595,33 +597,40 @@ void MetaParams::reload() {
 			pem.close();
 		} else {
 			qCritical("MetaParams: Failed to read %s", qPrintable(qsSSLKey));
+			return false;
 		}
 	}
 
+	QSslCertificate tmpCert;
+	QSslKey tmpKey;
+
 	if (! key.isEmpty() || ! crt.isEmpty()) {
 		if (! key.isEmpty()) {
-			qskKey = Server::privateKeyFromPEM(key, qbaPassPhrase);
+			tmpKey = Server::privateKeyFromPEM(key, qbaPassPhrase);
 		}
 		if (qskKey.isNull() && ! crt.isEmpty()) {
-			qskKey = Server::privateKeyFromPEM(crt, qbaPassPhrase);
-			if (! qskKey.isNull())
+			tmpKey = Server::privateKeyFromPEM(crt, qbaPassPhrase);
+			if (! tmpKey.isNull())
 				qCritical("MetaParams: Using private key found in certificate file.");
 		}
-		if (qskKey.isNull())
-			qFatal("MetaParams: No private key found in certificate or key file.");
+		if (tmpKey.isNull()) {
+			qCritical("MetaParams: No private key found in certificate or key file.");
+			return false;
+		}
 
 		QList<QSslCertificate> ql = QSslCertificate::fromData(crt);
 		ql << QSslCertificate::fromData(key);
 		for (int i=0;i<ql.size(); ++i) {
 			const QSslCertificate &c = ql.at(i);
 			if (Server::isKeyForCert(qskKey, c)) {
-				qscCert = c;
+				tmpCert = c;
 				ql.removeAt(i);
 				break;
 			}
 		}
-		if (qscCert.isNull()) {
-			qFatal("MetaParams: Failed to find certificate matching private key.");
+		if (tmpCert.isNull()) {
+			qCritical("MetaParams: Failed to find certificate matching private key.");
+			return false;
 		}
 		if (ql.size() > 0) {
 			QSslSocket::addDefaultCaCertificates(ql);
@@ -629,7 +638,14 @@ void MetaParams::reload() {
 		}
 	}
 
+	qscCert = tmpCert;
+	qskKey = tmpKey;
+
+	qmConfig.insert(QLatin1String("certificate"), qscCert.toPem());
+	qmConfig.insert(QLatin1String("key"), qskKey.toPem());
+
 	qWarning("MetaParams: certificate information reloaded");
+	return true;
 }
 
 Meta::Meta() {
@@ -662,8 +678,11 @@ Meta::~Meta() {
 #endif
 }
 
-void Meta::updateCertificates() {
-	Meta::mp.reload();
+bool Meta::updateCertificates() {
+	if (Meta::mp.reloadCertificateSettings()) {
+		return false;
+	}
+
 	foreach (Server *s, qhServers) {
 		if (s->bUsingMetaCert) {
 			s->log("Reloading certificates...");
@@ -672,6 +691,8 @@ void Meta::updateCertificates() {
 			s->log("Not reloading certificates; server does not use Meta certificate");
 		}
 	}
+
+	return true;
 }
 
 void Meta::getOSInfo() {
