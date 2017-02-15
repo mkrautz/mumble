@@ -1552,7 +1552,7 @@ static void impl_Server_updateCertificate(const ::Murmur::AMD_Server_updateCerti
 	// Verify that we can load the private key.
 	QSslKey privKey = ::Server::privateKeyFromPEM(privateKeyPem, passphraseBytes);
 	if (privKey.isNull()) {
-		privKey = ::Server::privateKeyFromPEM(cert);
+		privKey = ::Server::privateKeyFromPEM(certPem);
 		if (privKey.isNull()) {
 			ERR_clear_error();
 			cb->ice_exception(InvalidInputDataException());
