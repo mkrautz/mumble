@@ -673,8 +673,12 @@ Meta::~Meta() {
 void Meta::updateCertificates() {
 	Meta::mp.reload();
 	foreach (Server *s, qhServers) {
-		s->log("Reloading certificates...");
-		s->initializeCert();
+		if (s->bUsingMetaCert) {
+			s->log("Reloading certificates...");
+			s->initializeCert();
+		} else {
+			s->log("Not reloading certificates; server does not use Meta certificate");
+		}
 	}
 }
 
