@@ -114,10 +114,6 @@ public:
 	QString qsAbsSettingsFn;
 	QSettings *qsSettings;
 
-	/// If bInitialized is true, the MetaParams has
-	/// been initialied and is ready for use.
-	bool bInitialized;
-
 	MetaParams();
 	~MetaParams();
 	void read(QString fname = QString("murmur.ini"));
@@ -152,11 +148,11 @@ class Meta : public QObject {
 		Meta();
 		~Meta();
 
-		/// updateCertificates updates Murmur's MetaParams's
-		/// certifiacte info, and re-initializes the certificate
-		/// settings for any virtual servers that use the Meta
-		/// server's certificate configuration.
-		bool updateCertificates();
+		/// reloadSSLSettings reloads Murmur's MetaParams's
+		/// SSL settings, and updates the certificate and
+		/// private key for all virtual servers that use the
+		/// Meta server's certificate and private key.
+		bool reloadSSLSettings();
 
 		void bootAll();
 		bool boot(int);
