@@ -550,13 +550,11 @@ void MetaParams::read(QString fname) {
 	bInitialized = true;
 }
 
-bool MetaParams::reloadCertificateSettings() {
+bool MetaParams::loadSSLSettings() {
 	if (! bInitialized) {
-		qCritical("MetaParams: attempt to reload an uninitialized MetaParams object");
+		qCritical("MetaParams: attempt to load SSL settings in an uninitialized MetaParams object");
 		return false;
 	}
-
-	qWarning("MetaParams: reloading certificate-related settings from '%s'", qPrintable(qsAbsSettingsFn));
 
 	QSettings updatedSettings(qsAbsSettingsFn, QSettings::IniFormat);
 #if QT_VERSION >= 0x040500
@@ -668,19 +666,21 @@ bool MetaParams::reloadCertificateSettings() {
 			tmpDHParams = dhparams;
 		} else {
 			qCritical("Unable to use specified Diffie-Hellman parameters: %s", qPrintable(qdhp.errorString()));
-			return;
+			return false;
 		}
 	}
 #else
 	if (! qsSSLDHParams.isEmpty()) {
-		qFatal("This version of Murmur does not support Diffie-Hellman parameters (sslDHParams). Murmur will not start unless you remove the option from your murmur.ini file.");
+		qCritical("This version of Murmur does not support Diffie-Hellman parameters (sslDHParams). Murmur will not start unless you remove the option from your murmur.ini file.");
+		return false;
 	}
 #endif
 
 	{
 		QList<QSslCipher> ciphers = MumbleSSL::ciphersFromOpenSSLCipherString(tmpCiphers);
 		if (ciphers.isEmpty()) {
-			qFatal("Invalid sslCiphers option. Either the cipher string is invalid or none of the ciphers are available: \"%s\"", qPrintable(tmpCiphers));
+			qCritical("Invalid sslCiphers option. Either the cipher string is invalid or none of the ciphers are available: \"%s\"", qPrintable(tmpCiphers));
+			return false;
 		}
 
 		// If the version of Qt we're building against doesn't support
@@ -723,7 +723,6 @@ bool MetaParams::reloadCertificateSettings() {
 	qmConfig.insert(QLatin1String("sslCiphers"), qsCiphers);
 	qmConfig.insert(QLatin1String("sslDHParams"), QString::fromLatin1(qbaDHParams.constData()));
 
-	qWarning("MetaParams: certificate information reloaded");
 	return true;
 }
 
@@ -758,7 +757,8 @@ Meta::~Meta() {
 }
 
 bool Meta::updateCertificates() {
-	if (Meta::mp.reloadCertificateSettings()) {
+	// Reload SSL settings.
+	if (Meta::mp.loadSSLSettings()) {
 		return false;
 	}
 

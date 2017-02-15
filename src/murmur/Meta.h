@@ -122,12 +122,11 @@ public:
 	~MetaParams();
 	void read(QString fname = QString("murmur.ini"));
 
-	/// Attempt to reload certificate settings from
-	/// murmur.ini.
+	/// Attempt to load SSL settings from murmur.ini.
 	/// Returns true if successful. Returns false if
 	/// the operation failed. On failure, the MetaParams
 	/// object is left 100% intact.
-	bool reloadCertificateSettings();
+	bool loadSSLSettings();
 
 private:
 	template <class T>
