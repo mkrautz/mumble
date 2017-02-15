@@ -562,6 +562,7 @@ bool MetaParams::reloadCertificateSettings() {
 	updatedSettings.setIniCodec("UTF-8");
 #endif
 
+	QString qsCiphers = MumbleSSL::defaultOpenSSLCipherString();
 	qsCiphers = typeCheckedFromSettings("sslCiphers", qsCiphers, &updatedSettings);
 
 	QString qsSSLCert = updatedSettings.value("sslCert").toString();
@@ -569,7 +570,7 @@ bool MetaParams::reloadCertificateSettings() {
 	QString qsSSLCA = updatedSettings.value("sslCA").toString();
 	QString qsSSLDHParams = updatedSettings.value("sslDHParams").toString();
 
-	qbaPassPhrase = updatedSettings.value("sslPassPhrase").toByteArray();
+	QByteArray qbaPassPhrase = updatedSettings.value("sslPassPhrase").toByteArray();
 
 	if (! qsSSLCA.isEmpty()) {
 		QFile pem(qsSSLCA);
@@ -588,7 +589,7 @@ bool MetaParams::reloadCertificateSettings() {
 		}
 	}
 
-	QByteArray crt, key;
+	QByteArray crt, key, dhparams;
 
 	if (! qsSSLCert.isEmpty()) {
 		QFile pem(qsSSLCert);
@@ -613,6 +614,7 @@ bool MetaParams::reloadCertificateSettings() {
 
 	QSslCertificate tmpCert;
 	QSslKey tmpKey;
+	QByteArray tmpDHParams;
 
 	if (! key.isEmpty() || ! crt.isEmpty()) {
 		if (! key.isEmpty()) {
@@ -648,11 +650,77 @@ bool MetaParams::reloadCertificateSettings() {
 		}
 	}
 
+#if defined(USE_QSSLDIFFIEHELLMANPARAMETERS)
+	if (! qsSSLDHParams.isEmpty()) {
+		QFile pem(qsSSLDHParams);
+		if (pem.open(QIODevice::ReadOnly)) {
+			dhparams = pem.readAll();
+			pem.close();
+		} else {
+			qCritical("Failed to read %s", qPrintable(qsSSLDHParams));
+		}
+	}
+
+	if (! dhparams.isEmpty()) {
+		QSslDiffieHellmanParameters qdhp = QSslDiffieHellmanParameters::fromEncoded(dhparams);
+		if (qdhp.isValid()) {
+			tmpDHParams = dhparams;
+		} else {
+			qCritical("Unable to use specified Diffie-Hellman parameters: %s", qPrintable(qdhp.errorString()));
+			return;
+		}
+	}
+#else
+	if (! qsSSLDHParams.isEmpty()) {
+		qFatal("This version of Murmur does not support Diffie-Hellman parameters (sslDHParams). Murmur will not start unless you remove the option from your murmur.ini file.");
+	}
+#endif
+
+	{
+		QList<QSslCipher> ciphers = MumbleSSL::ciphersFromOpenSSLCipherString(qsCiphers);
+		if (ciphers.isEmpty()) {
+			qFatal("Invalid sslCiphers option. Either the cipher string is invalid or none of the ciphers are available: \"%s\"", qPrintable(qsCiphers));
+		}
+
+		// If the version of Qt we're building against doesn't support
+		// QSslDiffieHellmanParameters, then we must filter out Diffie-
+		// Hellman cipher suites in order to guarantee that we do not
+		// use Qt's default Diffie-Hellman parameters.
+		QList<QSslCipher> filtered;
+#if !defined(USE_QSSLDIFFIEHELLMANPARAMETERS)
+		foreach (QSslCipher c, ciphers) {
+			if (c.keyExchangeMethod() == QLatin1String("DH")) {
+				continue;
+			}
+			filtered << c;
+		}
+		if (ciphers.size() != filtered.size()) {
+			qWarning("Warning: all cipher suites in sslCiphers using Diffie-Hellman key exchange "
+			         "have been removed. Qt %s does not support custom Diffie-Hellman parameters.",
+				 qVersion());
+		}
+#else
+		filtered = ciphers;
+#endif
+
+		QSslSocket::setDefaultCiphers(filtered);
+
+		QStringList pref;
+		foreach (QSslCipher c, filtered) {
+			pref << c.name();
+		}
+		qWarning("Meta: TLS cipher preference is \"%s\"", qPrintable(pref.join(QLatin1String(":"))));
+	}
+
 	qscCert = tmpCert;
 	qskKey = tmpKey;
+	qbaDHParams = tmpDHParams;
+	this->qsCiphers = qsCiphers;
 
 	qmConfig.insert(QLatin1String("certificate"), qscCert.toPem());
 	qmConfig.insert(QLatin1String("key"), qskKey.toPem());
+	qmConfig.insert(QLatin1String("sslCiphers"), qsCiphers);
+	qmConfig.insert(QLatin1String("sslDHParams"), QString::fromLatin1(qbaDHParams.constData()));
 
 	qWarning("MetaParams: certificate information reloaded");
 	return true;
