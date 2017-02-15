@@ -229,7 +229,9 @@ void UnixMurmur::handleSigUsr1() {
 	Q_UNUSED(len);
 
 	if (meta) {
-		meta->updateCertificates();
+		qWarning("Meta: trying to reload SSL settings");
+		meta->reloadSSLSettings();
+		qWarning("Meta: done reloading SSL settings");
 	}
 
 	qsnUsr1->setEnabled(true);
