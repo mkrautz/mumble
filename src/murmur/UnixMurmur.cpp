@@ -228,7 +228,11 @@ void UnixMurmur::handleSigUsr1() {
 	ssize_t len = ::read(iUsr1Fd[1], &tmp, sizeof(tmp));
 	Q_UNUSED(len);
 
-	qWarning("Reloading certificates...");
+	if (meta) {
+		qWarning("Meta: trying to reload SSL settings");
+		meta->reloadSSLSettings();
+		qWarning("Meta: done reloading SSL settings");
+	}
 
 	qsnUsr1->setEnabled(true);
 }
