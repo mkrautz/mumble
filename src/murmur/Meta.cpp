@@ -161,7 +161,7 @@ void MetaParams::read(QString fname) {
 		if (fname.isEmpty()) {
 			QDir::root().mkpath(qdBasePath.absolutePath());
 			qdBasePath = QDir(datapaths.at(0));
-			fname = qdBasePath.absolutePath() + QLatin1String("/murmur.ini");
+			qsAbsSettingsFn = qdBasePath.absolutePath() + QLatin1String("/murmur.ini");
 		}
 	} else {
 		QFile f(fname);
@@ -169,11 +169,11 @@ void MetaParams::read(QString fname) {
 			qFatal("Specified ini file %s could not be opened", qPrintable(fname));
 		}
 		qdBasePath = QFileInfo(f).absoluteDir();
-		fname = QFileInfo(f).absoluteFilePath();
+		qsAbsSettingsFn = QFileInfo(f).absoluteFilePath();
 		f.close();
 	}
 	QDir::setCurrent(qdBasePath.absolutePath());
-	qsSettings = new QSettings(fname, QSettings::IniFormat);
+	qsSettings = new QSettings(qsAbsSettingsFn, QSettings::IniFormat);
 #if QT_VERSION >= 0x040500
 	qsSettings->setIniCodec("UTF-8");
 #endif
