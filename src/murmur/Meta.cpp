@@ -546,16 +546,9 @@ void MetaParams::read(QString fname) {
 	qmConfig.insert(QLatin1String("channelnestinglimit"), QString::number(iChannelNestingLimit));
 	qmConfig.insert(QLatin1String("sslCiphers"), qsCiphers);
 	qmConfig.insert(QLatin1String("sslDHParams"), QString::fromLatin1(qbaDHParams.constData()));
-
-	bInitialized = true;
 }
 
 bool MetaParams::loadSSLSettings() {
-	if (! bInitialized) {
-		qCritical("MetaParams: attempt to load SSL settings in an uninitialized MetaParams object");
-		return false;
-	}
-
 	QSettings updatedSettings(qsAbsSettingsFn, QSettings::IniFormat);
 #if QT_VERSION >= 0x040500
 	updatedSettings.setIniCodec("UTF-8");
@@ -756,12 +749,15 @@ Meta::~Meta() {
 #endif
 }
 
-bool Meta::updateCertificates() {
+bool Meta::reloadSSLSettings() {
 	// Reload SSL settings.
 	if (Meta::mp.loadSSLSettings()) {
 		return false;
 	}
 
+	// Re-initialize certificates for all
+	// virtual servers using the Meta server's
+	// certificate and private key.
 	foreach (Server *s, qhServers) {
 		if (s->bUsingMetaCert) {
 			s->log("Reloading certificates...");
