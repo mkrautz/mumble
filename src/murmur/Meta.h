@@ -109,6 +109,9 @@ public:
 	QVariant qvSuggestPositional;
 	QVariant qvSuggestPushToTalk;
 
+	/// qsAbsSettingsFn is the absolute path to
+	/// the murmur.ini used by this Meta instance.
+	QString qsAbsSettingsFn;
 	QSettings *qsSettings;
 
 	MetaParams();
