@@ -563,9 +563,12 @@ bool MetaParams::reloadCertificateSettings() {
 	updatedSettings.setIniCodec("UTF-8");
 #endif
 
+	qsCiphers = typeCheckedFromSettings("sslCiphers", qsCiphers, &updatedSettings);
+
 	QString qsSSLCert = updatedSettings.value("sslCert").toString();
 	QString qsSSLKey = updatedSettings.value("sslKey").toString();
 	QString qsSSLCA = updatedSettings.value("sslCA").toString();
+	QString qsSSLDHParams = updatedSettings.value("sslDHParams").toString();
 
 	qbaPassPhrase = updatedSettings.value("sslPassPhrase").toByteArray();
 
