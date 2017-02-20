@@ -99,6 +99,7 @@ void Server::update() {
 	/* Work around bug in QSslConfiguration */
 	QList<QSslCertificate> calist = ssl.caCertificates();
 	calist << QSslSocket::defaultCaCertificates();
+	calist << Meta::mp.qlCA;
 	calist << qscCert;
 	ssl.setCaCertificates(calist);
 
