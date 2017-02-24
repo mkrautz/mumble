@@ -46,6 +46,7 @@
 #include "Themes.h"
 #include "SSLCipherInfo.h"
 #include "CryptographicHash.h"
+#include "CertPinEvaluator.h"
 
 #ifdef Q_OS_WIN
 #include "TaskList.h"
@@ -2886,47 +2887,26 @@ void MainWindow::serverDisconnected(QAbstractSocket::SocketError err, QString re
 			QSslCertificate c = g.sh->qscCert.at(0);
 			QString basereason;
 
-			QString stored_digest = Database::getDigest(host, port);
-			QString expected_digest;
-			CryptographicHash::Algorithm algo;
-			CryptographicHash::Algorithm preferred_algo = CryptographicHash::Sha256;
-			bool has_stored_digest = false;
+			QString storedCertPinHash = Database::getDigest(host, port);
 
-			if (g.s.bCertPinningAllowLegacySHA1Pins && stored_digest.size() == 40) { // Non-prefixed SHA1
-				has_stored_digest = true;
+			CertPinEvaluator cpe;
+			cpe.setPreferredAlgorithm(CryptographicHash::Sha256);
+			cpe.setAllowLegacySHA1Pins(g.s.bCertPinningAllowLegacySHA1Pins);
+			CertPinEvaluatorResult cper = cpe.evaluate(c, storedCertPinHash);
 
-				algo = CryptographicHash::Sha1;
-
-				expected_digest = stored_digest;
-			} else if (stored_digest.startsWith(CryptographicHash::shortAlgorithmName(CryptographicHash::Sha256))) {
-				has_stored_digest = true;
-
-				algo = CryptographicHash::Sha256;
-
-				stored_digest.remove(QString::fromLatin1("%1:").arg(CryptographicHash::shortAlgorithmName(CryptographicHash::Sha256)));
-				expected_digest = stored_digest;
-			} else {
-				stored_digest = QString();
-				has_stored_digest = false;
-
-				// We didn't find a stored hash.
-				// Please use the preferred hashing algorithm when displaying stuff to the user.
-				algo = preferred_algo;
-			}
-
-			QString actual_digest = QString::fromLatin1(CryptographicHash::hash(c.toDer(), algo).toHex());
-			QString digests_section = tr("<li>Server certificate digest (%1):\t%2</li>").arg(CryptographicHash::humanReadableAlgorithmName(algo), ViewCert::prettifyDigest(actual_digest));
+			QString digests_section = tr("<li>Server certificate digest (%1):\t%2</li>").arg(CryptographicHash::humanReadableAlgorithmName(cper.usedAlgorithm()), ViewCert::prettifyDigest(cper.digest()));
 
 			// If the stored digest wasn't in the preferred hash format,
 			// include the preferred hash as well, for good measure.
-			if (algo != preferred_algo) {
+			CryptographicHash::Algorithm preferred_algo = cper.preferredAlgorithm();
+			if (cper.usedAlgorithm() != preferred_algo) {
 				QString preferred_digest = QString::fromLatin1(CryptographicHash::hash(c.toDer(), preferred_algo).toHex());
 				digests_section.append(tr("<li>Server certificate digest (%1):\t%2</li>").arg(CryptographicHash::humanReadableAlgorithmName(preferred_algo), ViewCert::prettifyDigest(preferred_digest)));
 			}
 
-			if (has_stored_digest) {
+			if (!cper.isOK()) { // XXX: !ok, has_stored_hash
 				basereason = tr("<b>WARNING:</b> The server presented a certificate that was different from the stored one.");
-				digests_section.append(tr("<li>Expected certificate digest (%1):\t%2</li>").arg(CryptographicHash::humanReadableAlgorithmName(algo), ViewCert::prettifyDigest(expected_digest)));
+				digests_section.append(tr("<li>Expected certificate digest (%1):\t%2</li>").arg(CryptographicHash::humanReadableAlgorithmName(cper.usedAlgorithm()), ViewCert::prettifyDigest(cper.expectedDigest())));
 			} else {
 				basereason = tr("Server presented a certificate which failed verification.");
 			}
