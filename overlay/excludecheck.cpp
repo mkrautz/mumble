@@ -34,6 +34,8 @@ static void ExcludeCheckEnsureInitialized() {
 	vWhitelist = ExcludeGetWhitelist();
 	vPaths = ExcludeGetPaths();
 	vBlacklist = ExcludeGetBlacklist();
+
+	bExcludeCheckInitialized = true;
 }
 
 static bool findParentProcessForChild(DWORD child, PROCESSENTRY32 *parent) {
