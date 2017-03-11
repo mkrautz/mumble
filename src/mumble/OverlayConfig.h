@@ -52,7 +52,7 @@ class OverlayConfig : public ConfigWidget, public Ui::OverlayConfig {
 		bool installerIsValid();
 		void showCertificates();
 
-		void updateOverlayExceptionModeState();
+		void updateOverlayExclusionModeState();
 
 		QString applicationIdentifierForPath(const QString &path);
 		OverlayAppInfo applicationInfoForId(const QString &identifier);
@@ -60,7 +60,7 @@ class OverlayConfig : public ConfigWidget, public Ui::OverlayConfig {
 		void on_qpbInstall_clicked();
 		void on_qpbUninstall_clicked();
 
-		void on_qcbOverlayExceptionMode_currentIndexChanged(int);
+		void on_qcbOverlayExclusionMode_currentIndexChanged(int);
 
 		void on_qlwLaunchers_itemSelectionChanged();
 		void on_qpbLaunchersAdd_clicked();

@@ -148,6 +148,11 @@ OverlayConfig::OverlayConfig(Settings &st) :
 		fViewScale(1.0f) {
 	setupUi(this);
 
+	qcbOverlayExclusionMode->insertItem(static_cast<int>(OverlaySettings::LauncherFilterExclusionMode), tr("Launcher Filter"));
+	qcbOverlayExclusionMode->insertItem(static_cast<int>(OverlaySettings::WhitelistExclusionMode), tr("Whitelist"));
+	qcbOverlayExclusionMode->insertItem(static_cast<int>(OverlaySettings::BlacklistExclusionMode), tr("Blacklist"));
+	qcbOverlayExclusionMode->setCurrentIndex(static_cast<int>(OverlaySettings::LauncherFilterExclusionMode));
+
 	if (! isInstalled()) {
 		qswOverlayPage->setCurrentWidget(qwOverlayInstall);
 	} else if (needsUpgrade()) {
@@ -185,29 +190,30 @@ OverlayConfig::OverlayConfig(Settings &st) :
 	// actions they perform are the same. The distinction is only there to inform
 	// users as to what's actually going on.
 	connect(qpbUpgrade, SIGNAL(clicked()), this, SLOT(on_qpbInstall_clicked()));
-
-	//updateOverlayExceptionModeState();
 }
 
-void OverlayConfig::updateOverlayExceptionModeState() {
-	int idx = qcbOverlayExceptionMode->currentIndex();
-	if (idx == 0) { // Launcher filter
-		qwLaunchers->setHidden(false);
-		qwWhitelist->setHidden(false);
-		qwPaths->setHidden(false);
-		qwBlacklist->setHidden(false);
-	} else if (idx == 1) { // Whitelist
-		qwLaunchers->setHidden(true);
-		qwWhitelist->setHidden(false);
-		qwPaths->setHidden(true);
-		qwBlacklist->setHidden(true);
-	} else if (idx == 2) { // Blacklist
-		qwLaunchers->setHidden(true);
-		qwWhitelist->setHidden(true);
-		qwPaths->setHidden(true);
-		qwBlacklist->setHidden(false);
-	} else {
-		qWarning("FAILS!");
+void OverlayConfig::updateOverlayExclusionModeState() {
+	OverlaySettings::OverlayExclusionMode exclusionMode = static_cast<OverlaySettings::OverlayExclusionMode>(qcbOverlayExclusionMode->currentIndex());
+
+	switch (exclusionMode) {
+		case OverlaySettings::LauncherFilterExclusionMode:
+			qwLaunchers->setHidden(false);
+			qwWhitelist->setHidden(false);
+			qwPaths->setHidden(false);
+			qwBlacklist->setHidden(false);
+			break;
+		case OverlaySettings::WhitelistExclusionMode:
+			qwLaunchers->setHidden(true);
+			qwWhitelist->setHidden(false);
+			qwPaths->setHidden(true);
+			qwBlacklist->setHidden(true);
+			break;
+		case OverlaySettings::BlacklistExclusionMode:
+			qwLaunchers->setHidden(true);
+			qwWhitelist->setHidden(true);
+			qwPaths->setHidden(true);
+			qwBlacklist->setHidden(false);
+			break;
 	}
 }
 
@@ -326,7 +332,7 @@ void OverlayConfig::load(const Settings &r) {
 	qcbShowTime->setChecked(s.os.bTime);
 	qgpFps->setEnabled(s.os.bEnable);
 
-	qcbOverlayExceptionMode->setCurrentIndex(s.os.iOverlayExcludeMode);
+	qcbOverlayExclusionMode->setCurrentIndex(static_cast<int>(s.os.oemOverlayExcludeMode));
 
 	// Launchers
 	{
@@ -503,7 +509,7 @@ void OverlayConfig::save() const {
 
 	// Directly save overlay config
 
-	s.os.iOverlayExcludeMode = qcbOverlayExceptionMode->currentIndex();
+	s.os.oemOverlayExcludeMode = static_cast<OverlaySettings::OverlayExclusionMode>(qcbOverlayExclusionMode->currentIndex());
 
 	// Launchers
 	{
@@ -673,8 +679,8 @@ void OverlayConfig::on_qlwLaunchers_itemSelectionChanged() {
 	}
 }
 
-void OverlayConfig::on_qcbOverlayExceptionMode_currentIndexChanged(int) {
-	updateOverlayExceptionModeState();
+void OverlayConfig::on_qcbOverlayExclusionMode_currentIndexChanged(int) {
+	updateOverlayExclusionModeState();
 }
 
 void OverlayConfig::on_qpbLaunchersAdd_clicked() {

@@ -338,23 +338,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QComboBox" name="qcbOverlayExceptionMode">
-               <item>
-                <property name="text">
-                 <string>Launcher Filter</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>Blacklist</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>Whitelist</string>
-                </property>
-               </item>
-              </widget>
+              <widget class="QComboBox" name="qcbOverlayExclusionMode"/>
              </item>
              <item>
               <spacer name="horizontalSpacer">
