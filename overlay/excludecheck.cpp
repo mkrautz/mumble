@@ -26,7 +26,7 @@ static void ExcludeCheckEnsureInitialized() {
 
 	int mode = ExcludeGetMode();
 	if (mode == -1) {
-		ods("Lib: No setting for overlay exclusion mode. Using 'launcher' mode (0)");
+		ods("ExcludeCheck: No setting for overlay exclusion mode. Using 'launcher' mode (0)");
 		mode = 0;
 	}
 	iExcludeMode = mode;
@@ -34,6 +34,8 @@ static void ExcludeCheckEnsureInitialized() {
 	vWhitelist = ExcludeGetWhitelist();
 	vPaths = ExcludeGetPaths();
 	vBlacklist = ExcludeGetBlacklist();
+
+	bExcludeCheckInitialized = true;
 }
 
 static bool findParentProcessForChild(DWORD child, PROCESSENTRY32 *parent) {
@@ -43,6 +45,9 @@ static bool findParentProcessForChild(DWORD child, PROCESSENTRY32 *parent) {
 
 	PROCESSENTRY32 pe;
 	pe.dwSize = sizeof(pe);
+
+	MODULEENTRY32 me;
+	me.dwSize = sizeof(me);
 
 	// Find our parent's process ID.
 	{
@@ -91,21 +96,87 @@ static bool findParentProcessForChild(DWORD child, PROCESSENTRY32 *parent) {
 	return done;
 }
 
-static bool findParentProcess(PROCESSENTRY32 *parent) {
+static bool getModuleForParent(PROCESSENTRY32 *parent, MODULEENTRY32 *module) {
+	HANDLE hSnap = NULL;
+	bool done = false;
+
+	MODULEENTRY32 me;
+	me.dwSize = sizeof(me);
+
+	hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE32 | TH32CS_SNAPMODULE, parent->th32ProcessID);
+	if (hSnap == INVALID_HANDLE_VALUE) {
+		goto out;
+	}
+
+	if (!Module32First(hSnap, &me)) {
+		goto out;
+	}
+
+	memcpy(module, &me, sizeof(me));
+	done = true;
+
+out:
+	CloseHandle(hSnap);
+	return done;
+}
+
+static bool getParentProcessInfo(std::string &parentAbsExeName, std::string &parentExeName) {
 	DWORD ourpid = GetCurrentProcessId();
-	return findParentProcessForChild(ourpid, parent);
+	PROCESSENTRY32 parent;
+	MODULEENTRY32 module;
+
+	bool ok = findParentProcessForChild(ourpid, &parent);
+	if (ok) {
+		ok = getModuleForParent(&parent, &module);
+		if (ok) {
+			parentAbsExeName = std::string(module.szExePath);
+			parentExeName = std::string(parent.szExeFile);
+			return true;
+		}
+	}
+
+	return false;
 }
 
-template <typename T> static inline bool vecContains(const std::vector<T> &v, T val) {
-	return std::find(v.begin(), v.end(), val) != v.end();
+// It rhymes!
+static inline void inPlaceLowerCase(std::string &s) {
+	std::transform(s.begin(), s.end(), s.begin(), tolower);
 }
 
-static bool isBlacklistedExe(const std::string &exeName) {
-	return vecContains(vBlacklist, exeName);
+static bool isAbsPath(const std::string &path) {
+	return path.find("\\") != std::string::npos;
 }
 
-static bool isWhitelistedExe(const std::string &exeName) {
-	return vecContains(vWhitelist, exeName);
+static bool isBlacklistedExe(const std::string &absExeName, const std::string &exeName) {
+	for (size_t i = 0; i < vBlacklist.size(); i++) {
+		std::string &val = vBlacklist.at(i);
+		if (isAbsPath(val)) {
+			if (val == absExeName) {
+				return true;
+			}
+		} else {
+			if (val == exeName) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+static bool isWhitelistedExe(const std::string &absExeName, const std::string &exeName) {
+	for (size_t i = 0; i < vWhitelist.size(); i++) {
+		std::string &val = vWhitelist.at(i);
+		if (isAbsPath(val)) {
+			if (val == absExeName) {
+				return true;
+			}
+		} else {
+			if (val == exeName) {
+				return true;
+			}
+		}
+	}
+	return false;
 }
 
 static bool isWhitelistedPath(const std::string &absExeName) {
@@ -118,37 +189,51 @@ static bool isWhitelistedPath(const std::string &absExeName) {
 	return false;
 }
 
-static bool isWhitelistedParent(const std::string &parentExeName) {
-	return vecContains(vLaunchers, parentExeName);
+static bool isWhitelistedParent(const std::string &absParentExeName, const std::string &parentExeName) {
+	for (size_t i = 0; i < vLaunchers.size(); i++) {
+		std::string &val = vLaunchers.at(i);
+		if (isAbsPath(val)) {
+			if (val == absParentExeName) {
+				return true;
+			}
+		} else {
+			if (val == parentExeName) {
+				return true;
+			}
+		}
+	}
+	return false;
 }
 
-bool ExcludeCheckIsOverlayEnabled(const std::string &absExeName, const std::string &exeName) {
+bool ExcludeCheckIsOverlayEnabled(std::string absExeName, std::string exeName) {
 	bool enableOverlay = true;
+
+	inPlaceLowerCase(absExeName);
+	inPlaceLowerCase(exeName);
 
 	ExcludeCheckEnsureInitialized();
 
 	if (iExcludeMode == 0) { // Launcher filter
 
-		PROCESSENTRY32 parent;
-		if (!findParentProcess(&parent)) {
+		std::string absParentExeName, parentExeName;
+		if (!getParentProcessInfo(absParentExeName, parentExeName)) {
 			// Unable to find parent. Process is allowed.
 			ods("ExcludeCheck: Unable to find parent. Process allowed.");
 			enableOverlay = true;
 		}
+		inPlaceLowerCase(absParentExeName);
+		inPlaceLowerCase(parentExeName);
 
-		std::string parentExeName(parent.szExeFile);
-		std::transform(parentExeName.begin(), parentExeName.end(), parentExeName.begin(), tolower);
-
-		ods("ExcludeCheck: Parent is '%s'", parentExeName.c_str());
+		ods("ExcludeCheck: Parent is '%s'", absParentExeName.c_str());
 
 		// The blacklist always wins.
 		// If an exe is in the blacklist, never show the overlay, ever.
-		if (isBlacklistedExe(exeName)) {
-			ods("ExcludeCheck: '%s' is blacklisted. Overlay disabled.", exeName.c_str());
+		if (isBlacklistedExe(absExeName, exeName)) {
+			ods("ExcludeCheck: '%s' is blacklisted. Overlay disabled.", absExeName.c_str());
 			enableOverlay = false;
 		// If the process's exe name is whitelisted, allow the overlay to be shown.
-		} else if (isWhitelistedExe(exeName)) {
-			ods("ExcludeCheck: '%s' is whitelisted. Overlay enabled.", exeName.c_str());
+		} else if (isWhitelistedExe(absExeName, exeName)) {
+			ods("ExcludeCheck: '%s' is whitelisted. Overlay enabled.", absExeName.c_str());
 			enableOverlay = true;
 		// If the exe is within a whitelisted path, allow the overlay to be shown.
 		// An example is:
@@ -161,7 +246,7 @@ bool ExcludeCheckIsOverlayEnabled(const std::string &absExeName, const std::stri
 		// If the direct parent is whitelisted, allow the process through.
 		// This allows us to whitelist Steam.exe, etc. -- and have the overlay
 		// show up in all Steam titles.
-		} else if (isWhitelistedParent(parentExeName)) {
+		} else if (isWhitelistedParent(absParentExeName, parentExeName)) {
 			ods("ExcludeCheck: Parent '%s' of '%s' is whitelisted. Overlay enabled.", parentExeName.c_str(), exeName.c_str());
 			enableOverlay = true;
 		// If nothing matched, do not show the overlay.
@@ -170,13 +255,13 @@ bool ExcludeCheckIsOverlayEnabled(const std::string &absExeName, const std::stri
 			enableOverlay = false;
 		}
 	} else if (iExcludeMode == 1) {
-		if (isWhitelistedExe(exeName)) {
+		if (isWhitelistedExe(absExeName, exeName)) {
 			enableOverlay = true;
 		} else {
 			enableOverlay = false;
 		}
 	} else if (iExcludeMode == 2) { // Blacklist
-		if (isBlacklistedExe(exeName)) {
+		if (isBlacklistedExe(absExeName, exeName)) {
 			enableOverlay = false;
 		} else {
 			enableOverlay = true;
