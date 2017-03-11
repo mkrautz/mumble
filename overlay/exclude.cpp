@@ -71,7 +71,7 @@ static std::vector<std::string> regReadMultiString(HKEY key,
 		goto err;
 	}
 
-	// If the multisz is longer than 4MB, treat it as an error.
+	// If the size is longer than 4MB, treat it as an error.
 	if (sz > 4*1024*1024) {
 		goto err;
 	}
