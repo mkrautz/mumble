@@ -19,6 +19,7 @@ static std::vector<std::string> vWhitelist;
 static std::vector<std::string> vPaths;
 static std::vector<std::string> vBlacklist;
 
+/// Ensure the ExcludeCheck module is initialized.
 static void ExcludeCheckEnsureInitialized() {
 	if (bExcludeCheckInitialized) {
 		return;
@@ -33,7 +34,11 @@ static void ExcludeCheckEnsureInitialized() {
 	bExcludeCheckInitialized = true;
 }
 
-static bool findParentProcessForChild(DWORD child, PROCESSENTRY32 *parent) {
+/// Find the PROCESSENTRY32 entry for the parent of the process with the |childpid| PID.
+///
+/// Returns true on success, and fills out |parent| with the correct PROCESSENTRY32.
+/// Returns false on failuire, and does not touch |parent|.
+static bool findParentProcessForChild(DWORD childpid, PROCESSENTRY32 *parent) {
 	DWORD parentpid = 0;
 	HANDLE hSnap = NULL;
 	bool done = false;
@@ -54,7 +59,7 @@ static bool findParentProcessForChild(DWORD child, PROCESSENTRY32 *parent) {
 		}
 		ok = Process32First(hSnap, &pe);
 		while (ok) {
-			if (pe.th32ProcessID == child) {
+			if (pe.th32ProcessID == childpid) {
 				parentpid = pe.th32ParentProcessID;
 				break;
 			}
@@ -91,6 +96,11 @@ static bool findParentProcessForChild(DWORD child, PROCESSENTRY32 *parent) {
 	return done;
 }
 
+/// Find the MODULEENTRY32 for the PROCESSENTRY32 |parent|.
+/// The MODULEENTRY32 allows us to access the absolute path of the parent executable.
+///
+/// Returns true on success, and fills out |module| with the proper MODULEENTRY32 entry.
+/// Returns false on failure, and does not touch |module|.
 static bool getModuleForParent(PROCESSENTRY32 *parent, MODULEENTRY32 *module) {
 	HANDLE hSnap = NULL;
 	bool done = false;
@@ -115,6 +125,16 @@ out:
 	return done;
 }
 
+/// Get the full, absolute path to the parent process's executable and return it in |åarentAbsExeName|,
+/// and also return the "basename" of the parent's executable in |parentExeName|
+///
+/// For example, for a Steam game, this function will set |parentAbsExeName| to
+///    c:\Program Files (x86)\Steam\Steam.exe
+/// and set |parentExeName| to
+///    Steam.exe
+///
+/// Returns true on success and fills out |parentAbsExeName| and |parentExeName|.
+/// Returns false on failure, and does not change |parentAbsExeName| and |parentExeName|.
 static bool getParentProcessInfo(std::string &parentAbsExeName, std::string &parentExeName) {
 	DWORD ourpid = GetCurrentProcessId();
 	PROCESSENTRY32 parent;
@@ -133,15 +153,21 @@ static bool getParentProcessInfo(std::string &parentAbsExeName, std::string &par
 	return false;
 }
 
-// It rhymes!
+/// Converts the string |s| to lowercase, in place.
+/// The name of this function was chosen such that it rhymes.
 static inline void inPlaceLowerCase(std::string &s) {
 	std::transform(s.begin(), s.end(), s.begin(), tolower);
 }
 
+/// Returns true if |path| is an absolute path.
+/// Returns false if |path| is not an absolute path.
 static bool isAbsPath(const std::string &path) {
 	return path.find("\\") != std::string::npos;
 }
 
+/// Check whether the program at |absExeName|
+/// (with basename of |exeName|) is in the Mumble
+/// overlay program blacklist.
 static bool isBlacklistedExe(const std::string &absExeName, const std::string &exeName) {
 	for (size_t i = 0; i < vBlacklist.size(); i++) {
 		std::string &val = vBlacklist.at(i);
@@ -158,6 +184,9 @@ static bool isBlacklistedExe(const std::string &absExeName, const std::string &e
 	return false;
 }
 
+/// Check whether the program at |absExeName|
+/// (with basename of |exeName|) is in the Mumble
+/// overlay program whitelist.
 static bool isWhitelistedExe(const std::string &absExeName, const std::string &exeName) {
 	for (size_t i = 0; i < vWhitelist.size(); i++) {
 		std::string &val = vWhitelist.at(i);
@@ -174,6 +203,8 @@ static bool isWhitelistedExe(const std::string &absExeName, const std::string &e
 	return false;
 }
 
+/// Check whether the program at |absExeName|
+/// is in the Mumble overlay path whitelist.
 static bool isWhitelistedPath(const std::string &absExeName) {
 	for (size_t i = 0; i < vPaths.size(); i++) {
 		const std::string &path = vPaths.at(i);
@@ -184,6 +215,9 @@ static bool isWhitelistedPath(const std::string &absExeName) {
 	return false;
 }
 
+/// Check whether the parent executalbe at
+/// |absParentExeName| (with basename |parentExeName|)
+/// is in the Mumble overlay's launcher whitelist.
 static bool isWhitelistedParent(const std::string &absParentExeName, const std::string &parentExeName) {
 	for (size_t i = 0; i < vLaunchers.size(); i++) {
 		std::string &val = vLaunchers.at(i);
@@ -210,6 +244,8 @@ bool ExcludeCheckIsOverlayEnabled(std::string absExeName, std::string exeName) {
 
 	switch (oemExcludeMode) {
 		case LauncherFilterExclusionMode: {
+			ods("ExcludeCheck: using 'launcher filter' exclusion mode...");
+
 			std::string absParentExeName, parentExeName;
 			if (!getParentProcessInfo(absParentExeName, parentExeName)) {
 				// Unable to find parent. Process is allowed.
@@ -252,17 +288,25 @@ bool ExcludeCheckIsOverlayEnabled(std::string absExeName, std::string exeName) {
 			break;
 		}
 		case WhitelistExclusionMode: {
+			ods("ExcludeCheck: using 'whitelist' exclusion mode...");
+
 			if (isWhitelistedExe(absExeName, exeName)) {
+				ods("ExcludeCheck: '%s' is whitelisted. Overlay enabled.", absExeName.c_str());
 				enableOverlay = true;
 			} else {
+				ods("ExcludeCheck: '%s' not whitelisted. Overlay disabled.", absExeName.c_str());
 				enableOverlay = false;
 			}
 			break;
 		}
 		case BlacklistExclusionMode: {
+			ods("ExcludeCheck: using 'blacklist' exclusion mode...");
+
 			if (isBlacklistedExe(absExeName, exeName)) {
+				ods("ExcludeCheck: '%s' is blacklisted. Overlay disabled.", absExeName.c_str());
 				enableOverlay = false;
 			} else {
+				ods("ExcludeCheck: '%s' is not blacklisted. Overlay enabled.", absExeName.c_str());
 				enableOverlay = true;
 			}
 			break;
