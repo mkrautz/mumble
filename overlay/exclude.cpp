@@ -51,15 +51,16 @@ static std::vector<std::string> regReadMultiString(HKEY key,
 	LONG err = 0;
 	std::vector<std::string> out;
 	char *buf = NULL;
+	HKEY subKeyHandle = 0;
 
-	err = RegOpenKeyExA(key, subKey.c_str(), NULL, KEY_READ, &key);
+	err = RegOpenKeyExA(key, subKey.c_str(), NULL, KEY_READ, &subKeyHandle);
 	if (err != ERROR_SUCCESS) {
 		goto err;
 	}
 
 	DWORD sz = 0;
 	DWORD type = 0;
-	err = RegQueryValueExA(key, valueName.c_str(), NULL, &type, NULL, &sz);
+	err = RegQueryValueExA(subKeyHandle, valueName.c_str(), NULL, &type, NULL, &sz);
 	if (err != ERROR_SUCCESS) {
 		goto err;
 	}
@@ -78,17 +79,20 @@ static std::vector<std::string> regReadMultiString(HKEY key,
 		goto err;
 	}
 
+	err = RegQueryValueExA(subKeyHandle, valueName.c_str(), NULL, &type, reinterpret_cast<BYTE *>(buf), &sz);
+	if (err != ERROR_SUCCESS) {
+		goto err;
+	}
+
 	size_t begin = 0;
 	for (size_t i = 0; i < sz; i++) {
 		if (buf[i] == 0) {
 			size_t len = i - begin;
-			if (len == 0) {
-				break;
+			if (len > 0) {
+				std::string s(&buf[begin], len);
+				out.push_back(s);
 			}
-			std::string s(&buf[begin], len);
-			out.push_back(s);
 			begin = i + 1;
-			continue;
 		}
 	}
 
