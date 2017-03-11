@@ -26,7 +26,7 @@ static void ExcludeCheckEnsureInitialized() {
 
 	int mode = ExcludeGetMode();
 	if (mode == -1) {
-		ods("Lib: No setting for overlay exclusion mode. Using 'launcher' mode (0)");
+		ods("ExcludeCheck: No setting for overlay exclusion mode. Using 'launcher' mode (0)");
 		mode = 0;
 	}
 	iExcludeMode = mode;
