@@ -6,7 +6,16 @@
 #ifndef MUMBLE_EXCLUDE_H_
 #define MUMBLE_EXCLUDE_H_
 
-int ExcludeGetMode();
+#include <string>
+#include <vector>
+
+enum OverlayExclusionMode {
+	LauncherFilterExclusionMode,
+	WhitelistExclusionMode,
+	BlacklistExclusionMode
+};
+
+OverlayExclusionMode ExcludeGetMode();
 std::vector<std::string> ExcludeGetLaunchers();
 std::vector<std::string> ExcludeGetWhitelist();
 std::vector<std::string> ExcludeGetPaths();

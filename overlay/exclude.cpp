@@ -3,6 +3,8 @@
 // that can be found in the LICENSE file at the root of the
 // Mumble source tree or at <https://www.mumble.info/LICENSE>.
 
+#include "exclude.h"
+
 #include "lib.h" // include lib.h for Windows headers...
 
 #include <algorithm>
@@ -101,7 +103,29 @@ err:
 	return out;
 }
 
-int ExcludeGetMode() {
+static std::string slowercase(std::string s) {
+	std::transform(s.begin(), s.end(), s.begin(), tolower);
+	return s;
+}
+
+static std::vector<std::string> vlowercase(std::vector<std::string> vec) {
+	std::transform(vec.begin(), vec.end(), vec.begin(), slowercase);
+	return vec;
+
+}
+
+static std::vector<std::string> vmerge(std::vector<std::string> v1, const std::vector<std::string> &v2) {
+	v1.insert(v1.end(), v2.begin(), v2.end());
+	return v1;
+}
+
+static std::vector<std::string> vexclude(const std::vector<std::string> &v, const std::vector<std::string> &vremove) {
+	std::vector<std::string> out;
+	std::set_difference(v.begin(), v.end(), vremove.begin(), vremove.end(), std::inserter(out, out.begin()));
+	return out;
+}
+
+static int getModeInternal() {
 	LONG err = 0;
 	HKEY key = NULL;
 	DWORD mode = -1;
@@ -123,26 +147,14 @@ int ExcludeGetMode() {
 	return static_cast<int>(mode);
 }
 
-static std::string slowercase(std::string s) {
-	std::transform(s.begin(), s.end(), s.begin(), tolower);
-	return s;
-}
-
-static std::vector<std::string> vlowercase(std::vector<std::string> vec) {
-	std::transform(vec.begin(), vec.end(), vec.begin(), slowercase);
-	return vec;
-
-}
-
-static std::vector<std::string> vmerge(std::vector<std::string> v1, const std::vector<std::string> &v2) {
-	v1.insert(v1.end(), v2.begin(), v2.end());
-	return v1;
-}
-
-static std::vector<std::string> vexclude(const std::vector<std::string> &v, const std::vector<std::string> &vremove) {
-	std::vector<std::string> out;
-	std::set_difference(v.begin(), v.end(), vremove.begin(), vremove.end(), std::inserter(out, out.begin()));
-	return out;
+OverlayExclusionMode ExcludeGetMode() {
+	int mode = getModeInternal();
+	if (mode == -1) {
+		// If no exclusion mode is set in the registry,
+		// use the launcher filter.
+		return LauncherFilterExclusionMode;
+	}
+	return static_cast<OverlayExclusionMode>(mode);
 }
 
 std::vector<std::string> ExcludeGetLaunchers() {
