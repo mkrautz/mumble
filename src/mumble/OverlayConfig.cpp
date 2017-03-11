@@ -772,9 +772,20 @@ void OverlayConfig::on_qlwPaths_itemSelectionChanged() {
 }
 
 void OverlayConfig::on_qpbPathsAdd_clicked() {
+	QString existingPath = QFileDialog::getExistingDirectory(this, tr("Choose path"));
+	QString dir = QDir::toNativeSeparators(existingPath);
+
+	if (! dir.isEmpty()) {
+		QListWidgetItem *qlwiPath = new QListWidgetItem(QIcon(), dir, qlwPaths);
+		qlwiPath->setData(Qt::UserRole, QVariant(dir));
+		qlwPaths->setCurrentItem(qlwiPath);
+	}
 }
 
 void OverlayConfig::on_qpbPathsRemove_clicked() {
+	int row = qlwPaths->currentRow();
+	if (row != -1)
+		delete qlwPaths->takeItem(row);
 }
 
 void OverlayConfig::on_qlwBlacklist_itemSelectionChanged() {
