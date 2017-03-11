@@ -127,7 +127,7 @@ static std::vector<std::string> vexclude(const std::vector<std::string> &v, cons
 
 static std::vector<std::string> vintersect(const std::vector<std::string> &v1, const std::vector<std::string> &v2) {
 	std::vector<std::string> out;
-	std::set_difference(v1.begin(), v1.end(), v2.begin(), v2.end(), std::inserter(out, out.begin()));
+	std::set_intersection(v1.begin(), v1.end(), v2.begin(), v2.end(), std::inserter(out, out.begin()));
 	return out;
 }
 
