@@ -164,7 +164,7 @@ std::vector<std::string> ExcludeGetPaths() {
 
 std::vector<std::string> ExcludeGetBlacklist() {
 	std::vector<std::string> defaultBlacklist = vlowercase(defaultBlacklistVector());
-	std::vector<std::string> userBlacklist = vlowercase(regReadMultiString(HKEY_CURRENT_USER, "Software\\Mumble\\Mumble\\overlay", "paths"));
-	std::vector<std::string> userExcludedBlacklistEntries = vlowercase(regReadMultiString(HKEY_CURRENT_USER, "Software\\Mumble\\Mumble\\overlay", "pathsexclude"));
+	std::vector<std::string> userBlacklist = vlowercase(regReadMultiString(HKEY_CURRENT_USER, "Software\\Mumble\\Mumble\\overlay", "blacklist"));
+	std::vector<std::string> userExcludedBlacklistEntries = vlowercase(regReadMultiString(HKEY_CURRENT_USER, "Software\\Mumble\\Mumble\\overlay", "blacklistexclude"));
 	return vexclude(vmerge(defaultBlacklist, userBlacklist), userExcludedBlacklistEntries);
 }
