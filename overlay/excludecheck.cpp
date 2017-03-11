@@ -13,7 +13,7 @@
 
 static bool bExcludeCheckInitialized = false;
 
-static int iExcludeMode = 0;
+static OverlayExclusionMode oemExcludeMode = 0;
 static std::vector<std::string> vLaunchers;
 static std::vector<std::string> vWhitelist;
 static std::vector<std::string> vPaths;
@@ -24,12 +24,7 @@ static void ExcludeCheckEnsureInitialized() {
 		return;
 	}
 
-	int mode = ExcludeGetMode();
-	if (mode == -1) {
-		ods("ExcludeCheck: No setting for overlay exclusion mode. Using 'launcher' mode (0)");
-		mode = 0;
-	}
-	iExcludeMode = mode;
+	oemExcludeMode = ExcludeGetMode();
 	vLaunchers = ExcludeGetLaunchers();
 	vWhitelist = ExcludeGetWhitelist();
 	vPaths = ExcludeGetPaths();
