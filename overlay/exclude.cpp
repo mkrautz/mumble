@@ -135,7 +135,7 @@ static std::vector<std::string> vmerge(std::vector<std::string> v1, const std::v
 	return v1;
 }
 
-static std::vector<std::string> vexclude(std::vector<std::string> v, std::vector<std::string> vremove) {
+static std::vector<std::string> vexclude(const std::vector<std::string> &v, const std::vector<std::string> &vremove) {
 	std::vector<std::string> out;
 	std::set_difference(v.begin(), v.end(), vremove.begin(), vremove.end(), std::inserter(out, out.begin()));	
 	return out;
