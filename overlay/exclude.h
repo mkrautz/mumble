@@ -9,16 +9,34 @@
 #include <string>
 #include <vector>
 
+/// OverlayExclusionMode defines the overlay exclusion
+/// rules for Mumble.
 enum OverlayExclusionMode {
+	/// Use the launcher filter-based exclusion mode.
 	LauncherFilterExclusionMode,
+	/// Use only the program whitelist.
 	WhitelistExclusionMode,
+	/// Use only the program blacklist.
 	BlacklistExclusionMode
 };
 
+/// Get the configured overlay exclusion mode for Mumble.
 OverlayExclusionMode ExcludeGetMode();
+
+/// Get the list of launcher programs to consider when
+/// checking the overlay exclusion rules.
 std::vector<std::string> ExcludeGetLaunchers();
+
+/// Get the list of whitelisted programs to consider when
+/// checking the overlay exclusion rules.
 std::vector<std::string> ExcludeGetWhitelist();
+
+/// Get the list of whitelisted paths to consider when
+/// checking the overlay exclusion rules.
 std::vector<std::string> ExcludeGetPaths();
+
+/// Get the list of blacklisted programs to consider when
+/// checking the overlay exclusion rules.
 std::vector<std::string> ExcludeGetBlacklist();
 
 #endif

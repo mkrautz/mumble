@@ -16,6 +16,7 @@
 #include "overlay_whitelist.h"
 #include "overlay_launchers.h"
 
+// Get the default blacklist (from overlay_blacklist.h) as a string vector.
 static std::vector<std::string> defaultBlacklistVector() {
 	std::vector<std::string> out;
 	size_t i = 0;
@@ -26,6 +27,7 @@ static std::vector<std::string> defaultBlacklistVector() {
 	return out;
 }
 
+// Get the default whitelist (from overlay_whitelist.h) as a string vector.
 static std::vector<std::string> defaultWhitelistVector() {
 	std::vector<std::string> out;
 	size_t i = 0;
@@ -36,6 +38,7 @@ static std::vector<std::string> defaultWhitelistVector() {
 	return out;
 }
 
+// Get the default launcher list (from overlay_launchers.h) as a string vector.
 static std::vector<std::string> defaultLaunchersVector() {
 	std::vector<std::string> out;
 	size_t i = 0;
@@ -46,6 +49,8 @@ static std::vector<std::string> defaultLaunchersVector() {
 	return out;
 }
 
+// Read a REG_MULTI_SZ value from the Windows registry and return it as a string vector.
+// Returns an empty vector on failure.
 static std::vector<std::string> regReadMultiString(HKEY key,
                                                    const std::string &subKey,
                                                    const std::string &valueName)
@@ -103,34 +108,41 @@ err:
 	return out;
 }
 
+// Convert the string |s| to lowercase and return it.
 static std::string slowercase(std::string s) {
 	std::transform(s.begin(), s.end(), s.begin(), tolower);
 	return s;
 }
 
+// Convert all entries of |vec| to lowercase and return the resulting vector.
 static std::vector<std::string> vlowercase(std::vector<std::string> vec) {
 	std::transform(vec.begin(), vec.end(), vec.begin(), slowercase);
 	return vec;
 
 }
 
+// Merge |v1| and |v2| and return the result.
 static std::vector<std::string> vmerge(std::vector<std::string> v1, const std::vector<std::string> &v2) {
 	v1.insert(v1.end(), v2.begin(), v2.end());
 	return v1;
 }
 
+// Filter out all entries of |vremove| from |v| and return the result.
 static std::vector<std::string> vexclude(const std::vector<std::string> &v, const std::vector<std::string> &vremove) {
 	std::vector<std::string> out;
 	std::set_difference(v.begin(), v.end(), vremove.begin(), vremove.end(), std::inserter(out, out.begin()));
 	return out;
 }
 
+// Find the intersection between |v1| and |v2| and return the result.
 static std::vector<std::string> vintersect(const std::vector<std::string> &v1, const std::vector<std::string> &v2) {
 	std::vector<std::string> out;
 	std::set_intersection(v1.begin(), v1.end(), v2.begin(), v2.end(), std::inserter(out, out.begin()));
 	return out;
 }
 
+// Get the Mumble client's configured overlay exclusion mode as an integer.
+// Returns -1 if the function could not read the value from the Windows registry.
 static int getModeInternal() {
 	LONG err = 0;
 	HKEY key = NULL;
