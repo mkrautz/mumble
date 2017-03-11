@@ -185,6 +185,11 @@ std::vector<std::string> ExcludeGetLaunchers() {
 
 std::vector<std::string> ExcludeGetWhitelist() {
 	std::vector<std::string> defaultWhitelist = vlowercase(defaultWhitelistVector());
+	// We don't consider Mumble's built-in whitelist when in WhitelistExclusionMode.
+	// The built-in whitelist is only used in LauncherFilterExclusionMode.
+	if (ExcludeGetMode() == WhitelistExclusionMode) {
+		defaultWhitelist = std::vector<std::string>();
+	}
 	std::vector<std::string> userWhitelist = vlowercase(regReadMultiString(HKEY_CURRENT_USER, "Software\\Mumble\\Mumble\\overlay", "whitelist"));
 	std::vector<std::string> userExcludedWhitelistEntries = vlowercase(regReadMultiString(HKEY_CURRENT_USER, "Software\\Mumble\\Mumble\\overlay", "whitelistexclude"));
 	std::vector<std::string> actualExcludedWhitelistEntries = vintersect(defaultWhitelist, userExcludedWhitelistEntries);
