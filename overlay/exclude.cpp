@@ -125,6 +125,12 @@ static std::vector<std::string> vexclude(const std::vector<std::string> &v, cons
 	return out;
 }
 
+static std::vector<std::string> vintersect(const std::vector<std::string> &v1, const std::vector<std::string> &v2) {
+	std::vector<std::string> out;
+	std::set_difference(v1.begin(), v1.end(), v2.begin(), v2.end(), std::inserter(out, out.begin()));
+	return out;
+}
+
 static int getModeInternal() {
 	LONG err = 0;
 	HKEY key = NULL;
@@ -161,26 +167,30 @@ std::vector<std::string> ExcludeGetLaunchers() {
 	std::vector<std::string> defaultLaunchers = vlowercase(defaultLaunchersVector());
 	std::vector<std::string> userLaunchers = vlowercase(regReadMultiString(HKEY_CURRENT_USER, "Software\\Mumble\\Mumble\\overlay", "launchers"));
 	std::vector<std::string> userExcludedLaunchers = vlowercase(regReadMultiString(HKEY_CURRENT_USER, "Software\\Mumble\\Mumble\\overlay", "launchersexclude"));
-	return vexclude(vmerge(defaultLaunchers, userLaunchers), userExcludedLaunchers);
+	std::vector<std::string> actualExcludedLaunchers = vintersect(defaultLaunchers, userExcludedLaunchers);
+	return vexclude(vmerge(defaultLaunchers, userLaunchers), actualExcludedLaunchers);
 }
 
 std::vector<std::string> ExcludeGetWhitelist() {
 	std::vector<std::string> defaultWhitelist = vlowercase(defaultWhitelistVector());
 	std::vector<std::string> userWhitelist = vlowercase(regReadMultiString(HKEY_CURRENT_USER, "Software\\Mumble\\Mumble\\overlay", "whitelist"));
 	std::vector<std::string> userExcludedWhitelistEntries = vlowercase(regReadMultiString(HKEY_CURRENT_USER, "Software\\Mumble\\Mumble\\overlay", "whitelistexclude"));
-	return vexclude(vmerge(defaultWhitelist, userWhitelist), userExcludedWhitelistEntries);
+	std::vector<std::string> actualExcludedWhitelistEntries = vintersect(defaultWhitelist, userExcludedWhitelistEntries);
+	return vexclude(vmerge(defaultWhitelist, userWhitelist), actualExcludedWhitelistEntries);
 }
 
 std::vector<std::string> ExcludeGetPaths() {
 	std::vector<std::string> defaultPaths;
 	std::vector<std::string> userPaths = vlowercase(regReadMultiString(HKEY_CURRENT_USER, "Software\\Mumble\\Mumble\\overlay", "paths"));
 	std::vector<std::string> userExcludedPaths = vlowercase(regReadMultiString(HKEY_CURRENT_USER, "Software\\Mumble\\Mumble\\overlay", "pathsexclude"));
-	return vexclude(vmerge(defaultPaths, userPaths), userExcludedPaths);
+	std::vector<std::string> actualExcludedPaths = vintersect(defaultPaths, userExcludedPaths);
+	return vexclude(vmerge(defaultPaths, userPaths), actualExcludedPaths);
 }
 
 std::vector<std::string> ExcludeGetBlacklist() {
 	std::vector<std::string> defaultBlacklist = vlowercase(defaultBlacklistVector());
 	std::vector<std::string> userBlacklist = vlowercase(regReadMultiString(HKEY_CURRENT_USER, "Software\\Mumble\\Mumble\\overlay", "blacklist"));
 	std::vector<std::string> userExcludedBlacklistEntries = vlowercase(regReadMultiString(HKEY_CURRENT_USER, "Software\\Mumble\\Mumble\\overlay", "blacklistexclude"));
-	return vexclude(vmerge(defaultBlacklist, userBlacklist), userExcludedBlacklistEntries);
+	std::vector<std::string> actualExcludedPaths = vintersect(defaultBlacklist, userExcludedBlacklistEntries);
+	return vexclude(vmerge(defaultBlacklist, userBlacklist), actualExcludedPaths);
 }
