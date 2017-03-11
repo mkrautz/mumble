@@ -15,6 +15,8 @@
   </property>
   <layout class="QVBoxLayout">
    <property name="margin">
+    <number>0</number>
+   </property>
    <item>
     <widget class="QStackedWidget" name="qswOverlayPage">
      <property name="currentIndex">
@@ -38,6 +40,8 @@
            <enum>QLayout::SetDefaultConstraint</enum>
           </property>
           <property name="margin">
+           <number>0</number>
+          </property>
           <item>
            <widget class="QGroupBox" name="qgbOptions">
             <property name="sizePolicy">
