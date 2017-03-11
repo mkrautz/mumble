@@ -474,11 +474,28 @@ extern "C" __declspec(dllexport) int __cdecl OverlayHelperProcessMain(unsigned i
 
 static bool createSharedDataMap();
 
+static bool parseProcName(char *procname, std::string &absExeName, std::string &dir, std::string &exeName) {
+	if (procname == NULL) {
+		return false;
+	}
+
+	char *p = strrchr(procname, '\\');
+	absExeName = std::string(procname);
+	dir = std::string(procname, p - procname);
+	exeName = std::string(p);
+
+	return true;
+}
+
 static bool dllmainProcAttach(char *procname) {
 	Mutex::init();
 
-	char *p = strrchr(procname, '\\');
-	if (!p) {
+	std::string absExeName;
+	std::string dir;
+	std::string exeName;
+	bool ok = parseProcName(procname, absExeName, dir, exeName);
+
+	if (!ok) {
 		// No blacklisting if the file has no path
 	} else if (GetProcAddress(NULL, "mumbleSelfDetection") != NULL) {
 		ods("Lib: Attached to overlay helper or Mumble process. Blacklisted - no overlay injection.");
