@@ -201,12 +201,33 @@ void OverlayConfig::updateOverlayExclusionModeState() {
 			qwWhitelist->setHidden(false);
 			qwPaths->setHidden(false);
 			qwBlacklist->setHidden(false);
+
+			// Show all whitelist items (including built-in items)
+			// in launcher filter mode.
+			for (int i = 0; i < qlwWhitelist->count(); i++) {
+				QListWidgetItem *item = qlwWhitelist->item(i);
+				item->setHidden(false);
+			}
+
 			break;
 		case OverlaySettings::WhitelistExclusionMode:
 			qwLaunchers->setHidden(true);
 			qwWhitelist->setHidden(false);
 			qwPaths->setHidden(true);
 			qwBlacklist->setHidden(true);
+
+			// Hide the built-in items when in WhitelistExclusionMode.
+			// They are only considered in launcher filter mode.
+			for (int i = 0; i < qlwWhitelist->count(); i++) {
+				QListWidgetItem *item = qlwWhitelist->item(i);
+				bool isBuiltin = item->data(OVERLAYCONFIG_BUILTIN_ROLE).toBool();
+				if (isBuiltin) {
+					item->setHidden(true);
+				} else {
+					item->setHidden(false);
+				}
+			}
+
 			break;
 		case OverlaySettings::BlacklistExclusionMode:
 			qwLaunchers->setHidden(true);
