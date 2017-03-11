@@ -63,6 +63,8 @@ struct OverlaySettings {
 
 	enum OverlaySort { Alphabetical, LastStateChange };
 
+	enum OverlayExclusionMode { LauncherFilterExclusionMode, WhitelistExclusionMode, BlacklistExclusionMode };
+
 	bool bEnable;
 
 	QString qsStyle;
@@ -119,10 +121,7 @@ struct OverlaySettings {
 	Qt::Alignment qaMutedDeafened;
 	Qt::Alignment qaAvatar;
 
-	/// 0 - Launcher filter
-	/// 1 - Whitelist
-	/// 2 - Blacklist
-	int iOverlayExcludeMode;
+	OverlayExclusionMode oemOverlayExcludeMode;
 	QStringList qslLaunchers;
 	QStringList qslLaunchersExclude;
 	QStringList qslWhitelist;
