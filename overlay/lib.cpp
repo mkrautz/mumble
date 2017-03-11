@@ -4,6 +4,7 @@
 // Mumble source tree or at <https://www.mumble.info/LICENSE>.
 
 #include "lib.h"
+#include "excludecheck.h"
 
 #include "overlay_exe/overlay_exe.h"
 
@@ -532,6 +533,10 @@ static bool dllmainProcAttach(char *procname) {
 	} else {
 		checkNoOverlayFile(dir);
 		checkDebugOverlayFile(dir);
+
+		if (bEnableOverlay) {
+			bEnableOverlay = ExcludeCheckIsOverlayEnabled(absExeName, exeName);
+		}
 	}
 
 	OSVERSIONINFOEX ovi;
