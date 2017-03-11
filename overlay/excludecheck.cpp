@@ -6,6 +6,7 @@
 #include "lib.h"
 #include "exclude.h"
 
+#include <tlhelp32.h>
 #include <algorithm>
 #include <string>
 #include <vector>
