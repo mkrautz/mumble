@@ -13,7 +13,7 @@
 
 static bool bExcludeCheckInitialized = false;
 
-static OverlayExclusionMode oemExcludeMode = 0;
+static OverlayExclusionMode oemExcludeMode = LauncherFilterExclusionMode;
 static std::vector<std::string> vLaunchers;
 static std::vector<std::string> vWhitelist;
 static std::vector<std::string> vPaths;
@@ -208,58 +208,64 @@ bool ExcludeCheckIsOverlayEnabled(std::string absExeName, std::string exeName) {
 
 	ExcludeCheckEnsureInitialized();
 
-	if (iExcludeMode == 0) { // Launcher filter
+	switch (oemExcludeMode) {
+		case LauncherFilterExclusionMode: {
+			std::string absParentExeName, parentExeName;
+			if (!getParentProcessInfo(absParentExeName, parentExeName)) {
+				// Unable to find parent. Process is allowed.
+				ods("ExcludeCheck: Unable to find parent. Process allowed.");
+				enableOverlay = true;
+			}
+			inPlaceLowerCase(absParentExeName);
+			inPlaceLowerCase(parentExeName);
 
-		std::string absParentExeName, parentExeName;
-		if (!getParentProcessInfo(absParentExeName, parentExeName)) {
-			// Unable to find parent. Process is allowed.
-			ods("ExcludeCheck: Unable to find parent. Process allowed.");
-			enableOverlay = true;
-		}
-		inPlaceLowerCase(absParentExeName);
-		inPlaceLowerCase(parentExeName);
+			ods("ExcludeCheck: Parent is '%s'", absParentExeName.c_str());
 
-		ods("ExcludeCheck: Parent is '%s'", absParentExeName.c_str());
-
-		// The blacklist always wins.
-		// If an exe is in the blacklist, never show the overlay, ever.
-		if (isBlacklistedExe(absExeName, exeName)) {
-			ods("ExcludeCheck: '%s' is blacklisted. Overlay disabled.", absExeName.c_str());
-			enableOverlay = false;
-		// If the process's exe name is whitelisted, allow the overlay to be shown.
-		} else if (isWhitelistedExe(absExeName, exeName)) {
-			ods("ExcludeCheck: '%s' is whitelisted. Overlay enabled.", absExeName.c_str());
-			enableOverlay = true;
-		// If the exe is within a whitelisted path, allow the overlay to be shown.
-		// An example is:
-		// Whitelisted path: d:\games
-		// absExeName: d:\games\World of Warcraft\Wow-64.exe
-		// The overlay would be shown in WoW (and any game that lives under d:\games)
-		 } else if (isWhitelistedPath(absExeName)) {
-			ods("ExcludeCheck: '%s' is within a whitelisted path. Overlay enabled.", absExeName.c_str());
-		 	enableOverlay = true;
-		// If the direct parent is whitelisted, allow the process through.
-		// This allows us to whitelist Steam.exe, etc. -- and have the overlay
-		// show up in all Steam titles.
-		} else if (isWhitelistedParent(absParentExeName, parentExeName)) {
-			ods("ExcludeCheck: Parent '%s' of '%s' is whitelisted. Overlay enabled.", parentExeName.c_str(), exeName.c_str());
-			enableOverlay = true;
-		// If nothing matched, do not show the overlay.
-		} else {
-			ods("ExcludeCheck: No matching overlay exclusion rule found. Overlay disabled.");
-			enableOverlay = false;
+			// The blacklist always wins.
+			// If an exe is in the blacklist, never show the overlay, ever.
+			if (isBlacklistedExe(absExeName, exeName)) {
+				ods("ExcludeCheck: '%s' is blacklisted. Overlay disabled.", absExeName.c_str());
+				enableOverlay = false;
+			// If the process's exe name is whitelisted, allow the overlay to be shown.
+			} else if (isWhitelistedExe(absExeName, exeName)) {
+				ods("ExcludeCheck: '%s' is whitelisted. Overlay enabled.", absExeName.c_str());
+				enableOverlay = true;
+			// If the exe is within a whitelisted path, allow the overlay to be shown.
+			// An example is:
+			// Whitelisted path: d:\games
+			// absExeName: d:\games\World of Warcraft\Wow-64.exe
+			// The overlay would be shown in WoW (and any game that lives under d:\games)
+			} else if (isWhitelistedPath(absExeName)) {
+				ods("ExcludeCheck: '%s' is within a whitelisted path. Overlay enabled.", absExeName.c_str());
+				enableOverlay = true;
+			// If the direct parent is whitelisted, allow the process through.
+			// This allows us to whitelist Steam.exe, etc. -- and have the overlay
+			// show up in all Steam titles.
+			} else if (isWhitelistedParent(absParentExeName, parentExeName)) {
+				ods("ExcludeCheck: Parent '%s' of '%s' is whitelisted. Overlay enabled.", parentExeName.c_str(), exeName.c_str());
+				enableOverlay = true;
+			// If nothing matched, do not show the overlay.
+			} else {
+				ods("ExcludeCheck: No matching overlay exclusion rule found. Overlay disabled.");
+				enableOverlay = false;
+			}
+			break;
 		}
-	} else if (iExcludeMode == 1) {
-		if (isWhitelistedExe(absExeName, exeName)) {
-			enableOverlay = true;
-		} else {
-			enableOverlay = false;
+		case WhitelistExclusionMode: {
+			if (isWhitelistedExe(absExeName, exeName)) {
+				enableOverlay = true;
+			} else {
+				enableOverlay = false;
+			}
+			break;
 		}
-	} else if (iExcludeMode == 2) { // Blacklist
-		if (isBlacklistedExe(absExeName, exeName)) {
-			enableOverlay = false;
-		} else {
-			enableOverlay = true;
+		case BlacklistExclusionMode: {
+			if (isBlacklistedExe(absExeName, exeName)) {
+				enableOverlay = false;
+			} else {
+				enableOverlay = true;
+			}
+			break;
 		}
 	}
 
