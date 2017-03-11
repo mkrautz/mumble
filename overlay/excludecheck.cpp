@@ -111,9 +111,11 @@ static bool isWhitelistedExe(const std::string &exeName) {
 }
 
 static bool isWhitelistedPath(const std::string &absExeName) {
+	std::string lowerAbsExeName(absExeName);
+	std::transform(lowerAbsExeName.begin(), lowerAbsExeName.end(), lowerAbsExeName.begin(), tolower);
 	for (size_t i = 0; i < vPaths.size(); i++) {
 		const std::string &path = vPaths.at(i);
-		if (absExeName.find(path) == 0) {
+		if (lowerAbsExeName.find(path) == 0) {
 			return true;
 		}
 	}
