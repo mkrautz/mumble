@@ -509,9 +509,13 @@ static bool parseProcName(char *procname, std::string &absExeName, std::string &
 	}
 
 	char *p = strrchr(procname, '\\');
+	if (p == NULL) {
+		return false;
+	}
+
 	absExeName = std::string(procname);
 	dir = std::string(procname, p - procname);
-	exeName = std::string(p);
+	exeName = std::string(p + 1);
 
 	return true;
 }
