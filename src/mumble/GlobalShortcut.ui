@@ -206,6 +206,38 @@
         </item>
        </layout>
       </item>
+      <item>
+       <widget class="QGroupBox" name="qgbWindowsShortcutEngines">
+        <property name="whatsThis">
+         <string>&lt;p&gt;This section allows you to configure the availability of additional GlobalShortcut engines.&lt;/p&gt;</string>
+        </property>
+        <property name="title">
+         <string>Shortcut Engines</string>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_5">
+         <item>
+          <widget class="QCheckBox" name="qcbEnableGKey">
+           <property name="whatsThis">
+            <string>&lt;/p&gt;This setting enables support for the GKey GlobalShortcutEngine&lt;/p&gt;</string>
+           </property>
+           <property name="text">
+            <string>Enable GKey</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="qcbEnableXboxInput">
+           <property name="whatsThis">
+            <string>&lt;/p&gt;This setting enables support for the XInput GlobalShortcutEngine, for Xbox compatible controllers.&lt;/p&gt;</string>
+           </property>
+           <property name="text">
+            <string>Enable XInput</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>

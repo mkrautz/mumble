@@ -513,6 +513,12 @@ GlobalShortcutConfig::GlobalShortcutConfig(Settings &st) : ConfigWidget(st) {
 
 	qwWarningContainer->setVisible(false);
 
+#ifdef Q_OS_WIN
+	qgbWindowsShortcutEngines->setVisible(true);
+#else
+	qgbWindowsShortcutEngines->setVisible(false);
+#endif
+
 	qtwShortcuts->setColumnCount(canSuppress ? 4 : 3);
 	qtwShortcuts->setItemDelegate(new ShortcutDelegate(qtwShortcuts));
 
@@ -673,6 +679,9 @@ void GlobalShortcutConfig::load(const Settings &r) {
 		qwWarningContainer->setVisible(showWarning());
 	}
 
+	qcbEnableGKey->setChecked(r.bEnableGKey);
+	qcbEnableXboxInput->setChecked(r.bEnableXboxInput);
+
 	qcbEnableGlobalShortcuts->setCheckState(r.bShortcutEnable ? Qt::Checked : Qt::Unchecked);
 	on_qcbEnableGlobalShortcuts_stateChanged(qcbEnableGlobalShortcuts->checkState());
 	reload();
@@ -681,6 +690,9 @@ void GlobalShortcutConfig::load(const Settings &r) {
 void GlobalShortcutConfig::save() const {
 	s.qlShortcuts = qlShortcuts;
 	s.bShortcutEnable = qcbEnableGlobalShortcuts->checkState() == Qt::Checked;
+
+	s.bEnableGKey = qcbEnableGKey->checkState() == Qt::Checked;
+	s.bEnableXboxInput = qcbEnableXboxInput->checkState() == Qt::Checked;
 }
 
 QTreeWidgetItem *GlobalShortcutConfig::itemForShortcut(const Shortcut &sc) const {
