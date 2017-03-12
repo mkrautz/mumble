@@ -8,7 +8,7 @@
 
 static const char *overlayLaunchers[] = {
 	"Steam.exe", // Steam
-	"EALaunchHelper.exe", // Origin
+	"Origin.exe", // Origin
 	"Battle.net.exe", // Battle.net
 	"GalaxyClient.exe", // GOG Galaxy
 	"UbisoftGameLauncher.exe", // Uplay
