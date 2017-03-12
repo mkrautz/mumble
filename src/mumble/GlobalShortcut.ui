@@ -206,6 +206,48 @@
         </item>
        </layout>
       </item>
+      <item>
+       <widget class="QGroupBox" name="qgbWindowsShortcutEngines">
+        <property name="whatsThis">
+         <string>&lt;p&gt;This section allows you to configure the availability of additional GlobalShortcut engines.&lt;/p&gt;</string>
+        </property>
+        <property name="title">
+         <string>Additional Shortcut Engines</string>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_5">
+         <item>
+          <widget class="QCheckBox" name="qcbEnableWinHooks">
+           <property name="whatsThis">
+            <string>This setting enables the Windows hooks shortcut engine.</string>
+           </property>
+           <property name="text">
+            <string>Enable Windows hooks</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="qcbEnableGKey">
+           <property name="whatsThis">
+            <string>This setting enables the GKey shortcut engine.</string>
+           </property>
+           <property name="text">
+            <string>Enable GKey</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="qcbEnableXboxInput">
+           <property name="whatsThis">
+            <string>This setting enables support for the XInput shortcut engine, for Xbox compatible controllers.</string>
+           </property>
+           <property name="text">
+            <string>Enable XInput</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
