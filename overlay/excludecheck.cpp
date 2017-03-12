@@ -125,38 +125,58 @@ out:
 	return done;
 }
 
-/// Get the full, absolute path to the parent process's executable and return it in |åarentAbsExeName|,
-/// and also return the "basename" of the parent's executable in |parentExeName|
+/// Return the absolute and relative exe names of this process's ancestors in
+/// |absAncestorExeNames| and |ancestorExeNames|.
 ///
-/// For example, for a Steam game, this function will set |parentAbsExeName| to
-///    c:\Program Files (x86)\Steam\Steam.exe
-/// and set |parentExeName| to
-///    Steam.exe
-///
-/// Returns true on success and fills out |parentAbsExeName| and |parentExeName|.
-/// Returns false on failure, and does not change |parentAbsExeName| and |parentExeName|.
-static bool getParentProcessInfo(std::string &parentAbsExeName, std::string &parentExeName) {
-	DWORD ourpid = GetCurrentProcessId();
+/// Returns true on success and fills out |absAncestorExeNames| and |ancestorExeNames|.
+/// Returns false on failure, and does not change |absAncestorExeNames| and |ancestorExeNames|.
+static bool getAncestorChain(std::vector<std::string> &absAncestorExeNames, std::vector<std::string> &ancestorExeNames) {
 	PROCESSENTRY32 parent;
 	MODULEENTRY32 module;
 
-	bool ok = findParentProcessForChild(ourpid, &parent);
-	if (ok) {
-		ok = getModuleForParent(&parent, &module);
+	std::vector<std::string> abs;
+	std::vector<std::string> rel;
+
+	bool ok = true;
+	DWORD childpid = GetCurrentProcessId();
+	while (ok) {
+		ok = findParentProcessForChild(childpid, &parent);
 		if (ok) {
-			parentAbsExeName = std::string(module.szExePath);
-			parentExeName = std::string(parent.szExeFile);
-			return true;
+			ok = getModuleForParent(&parent, &module);
+			if (ok) {
+				abs.push_back(std::string(module.szExePath));
+				rel.push_back(std::string(parent.szExeFile));
+				childpid = parent.th32ProcessID;
+			}
 		}
 	}
 
-	return false;
+	ok = abs.size() > 0;
+	if (ok) {
+		absAncestorExeNames = abs;
+		ancestorExeNames = rel;
+	}
+
+	return ok;
 }
 
 /// Converts the string |s| to lowercase, in place.
 /// The name of this function was chosen such that it rhymes.
 static inline void inPlaceLowerCase(std::string &s) {
 	std::transform(s.begin(), s.end(), s.begin(), tolower);
+}
+
+// Convert the string |s| to lowercase and return it.
+static std::string slowercase(std::string s) {
+	std::transform(s.begin(), s.end(), s.begin(), tolower);
+	return s;
+}
+
+// Convert all entries of |vec| to lowercase and return the resulting vector.
+static std::vector<std::string> vlowercase(std::vector<std::string> vec) {
+	std::transform(vec.begin(), vec.end(), vec.begin(), slowercase);
+	return vec;
+
 }
 
 /// Returns true if |path| is an absolute path.
@@ -215,18 +235,19 @@ static bool isWhitelistedPath(const std::string &absExeName) {
 	return false;
 }
 
-/// Check whether the parent executalbe at
-/// |absParentExeName| (with basename |parentExeName|)
-/// is in the Mumble overlay's launcher whitelist.
-static bool isWhitelistedParent(const std::string &absParentExeName, const std::string &parentExeName) {
+/// Check whether an ancestor executable in
+/// |absAncestorExeNames| (or |ancestorExeNames|,
+/// for relative paths) is in the Mumble overlay's
+/// launcher whitelist.
+static bool hasWhitelistedAncestor(const std::vector<std::string> &absAncestorExeNames, const std::vector<std::string> &ancestorExeNames) {
 	for (size_t i = 0; i < vLaunchers.size(); i++) {
 		std::string &val = vLaunchers.at(i);
 		if (isAbsPath(val)) {
-			if (val == absParentExeName) {
+			if (std::find(absAncestorExeNames.begin(), absAncestorExeNames.end(), val) != absAncestorExeNames.end()) {
 				return true;
 			}
 		} else {
-			if (val == parentExeName) {
+			if (std::find(ancestorExeNames.begin(), ancestorExeNames.end(), val) != ancestorExeNames.end()) {
 				return true;
 			}
 		}
@@ -246,16 +267,20 @@ bool ExcludeCheckIsOverlayEnabled(std::string absExeName, std::string exeName) {
 		case LauncherFilterExclusionMode: {
 			ods("ExcludeCheck: using 'launcher filter' exclusion mode...");
 
-			std::string absParentExeName, parentExeName;
-			if (!getParentProcessInfo(absParentExeName, parentExeName)) {
-				// Unable to find parent. Process is allowed.
+			std::vector<std::string> absAncestorExeNames;
+			std::vector<std::string> ancestorExeNames;
+			if (!getAncestorChain(absAncestorExeNames, ancestorExeNames)) {
+				// Unable to get ancestor chain. Process is allowed.
 				ods("ExcludeCheck: Unable to find parent. Process allowed.");
 				enableOverlay = true;
 			}
-			inPlaceLowerCase(absParentExeName);
-			inPlaceLowerCase(parentExeName);
+			absAncestorExeNames = vlowercase(absAncestorExeNames);
+			ancestorExeNames = vlowercase(ancestorExeNames);
 
-			ods("ExcludeCheck: Parent is '%s'", absParentExeName.c_str());
+			for (size_t i = 0; i < absAncestorExeNames.size(); i++) {
+				std::string absAncestorExeName = absAncestorExeNames.at(i);
+				ods("ExcludeCheck: Ancestor #%i is '%s'", i+1, absAncestorExeName.c_str());
+			}
 
 			// The blacklist always wins.
 			// If an exe is in the blacklist, never show the overlay, ever.
@@ -274,11 +299,11 @@ bool ExcludeCheckIsOverlayEnabled(std::string absExeName, std::string exeName) {
 			} else if (isWhitelistedPath(absExeName)) {
 				ods("ExcludeCheck: '%s' is within a whitelisted path. Overlay enabled.", absExeName.c_str());
 				enableOverlay = true;
-			// If the direct parent is whitelisted, allow the process through.
+			// If any of the process's ancestors are whitelisted, allow the process through.
 			// This allows us to whitelist Steam.exe, etc. -- and have the overlay
 			// show up in all Steam titles.
-			} else if (isWhitelistedParent(absParentExeName, parentExeName)) {
-				ods("ExcludeCheck: Parent '%s' of '%s' is whitelisted. Overlay enabled.", parentExeName.c_str(), exeName.c_str());
+			} else if (hasWhitelistedAncestor(absAncestorExeNames, ancestorExeNames)) {
+				ods("ExcludeCheck: An ancestor of '%s' is whitelisted. Overlay enabled.", exeName.c_str());
 				enableOverlay = true;
 			// If nothing matched, do not show the overlay.
 			} else {
