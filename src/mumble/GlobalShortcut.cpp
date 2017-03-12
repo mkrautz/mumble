@@ -691,8 +691,15 @@ void GlobalShortcutConfig::save() const {
 	s.qlShortcuts = qlShortcuts;
 	s.bShortcutEnable = qcbEnableGlobalShortcuts->checkState() == Qt::Checked;
 
+	bool oldGKey = s.bEnableGKey;
 	s.bEnableGKey = qcbEnableGKey->checkState() == Qt::Checked;
+
+	bool oldXboxInput = s.bEnableXboxInput;
 	s.bEnableXboxInput = qcbEnableXboxInput->checkState() == Qt::Checked;
+
+	if (s.bEnableGKey != oldGKey || s.bEnableXboxInput != oldXboxInput) {
+		s.requireRestartToApply = true;
+	}
 }
 
 QTreeWidgetItem *GlobalShortcutConfig::itemForShortcut(const Shortcut &sc) const {
