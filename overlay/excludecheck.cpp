@@ -38,7 +38,7 @@ static void ExcludeCheckEnsureInitialized() {
 /// Find the PROCESSENTRY32 entry for the parent of the process with the |childpid| PID.
 ///
 /// Returns true on success, and fills out |parent| with the correct PROCESSENTRY32.
-/// Returns false on failuire, and does not touch |parent|.
+/// Returns false on failure, and does not touch |parent|.
 static bool findParentProcessForChild(DWORD childpid, PROCESSENTRY32 *parent) {
 	DWORD parentpid = 0;
 	HANDLE hSnap = NULL;
