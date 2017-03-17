@@ -508,7 +508,7 @@ static void checkDebugOverlayFile(const std::string &dir) {
 // that the executable lives in in |dir| and the basename of the executable in
 // |exeName|.
 //
-// Returns true on sucess and fills out |absExeName|, |dir| and |exeName|.
+// Returns true on success and fills out |absExeName|, |dir| and |exeName|.
 // Returns false on failure, and does not touch |absExeName|, |dir| and |exeName|.
 static bool parseProcName(char *procname, std::string &absExeName, std::string &dir, std::string &exeName) {
 	if (procname == NULL) {
