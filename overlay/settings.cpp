@@ -3,7 +3,7 @@
 // that can be found in the LICENSE file at the root of the
 // Mumble source tree or at <https://www.mumble.info/LICENSE>.
 
-#include "exclude.h"
+#include "settings.h"
 
 #include "lib.h" // include lib.h for Windows headers...
 #include "util.h"
@@ -133,7 +133,7 @@ static int getModeInternal() {
 	return static_cast<int>(mode);
 }
 
-OverlayExclusionMode ExcludeGetMode() {
+OverlayExclusionMode SettingsGetExclusionMode() {
 	int mode = getModeInternal();
 	if (mode == -1) {
 		// If no exclusion mode is set in the registry,
@@ -143,7 +143,7 @@ OverlayExclusionMode ExcludeGetMode() {
 	return static_cast<OverlayExclusionMode>(mode);
 }
 
-std::vector<std::string> ExcludeGetLaunchers() {
+std::vector<std::string> SettingsGetLaunchers() {
 	std::vector<std::string> defaultLaunchers = vlowercase(defaultLaunchersVector());
 	std::vector<std::string> userLaunchers = vlowercase(regReadMultiString(HKEY_CURRENT_USER, "Software\\Mumble\\Mumble\\overlay", "launchers"));
 	std::vector<std::string> userExcludedLaunchers = vlowercase(regReadMultiString(HKEY_CURRENT_USER, "Software\\Mumble\\Mumble\\overlay", "launchersexclude"));
@@ -151,11 +151,11 @@ std::vector<std::string> ExcludeGetLaunchers() {
 	return vexclude(vmerge(defaultLaunchers, userLaunchers), actualExcludedLaunchers);
 }
 
-std::vector<std::string> ExcludeGetWhitelist() {
+std::vector<std::string> SettingsGetWhitelist() {
 	std::vector<std::string> defaultWhitelist = vlowercase(defaultWhitelistVector());
 	// We don't consider Mumble's built-in whitelist when in WhitelistExclusionMode.
 	// The built-in whitelist is only used in LauncherFilterExclusionMode.
-	if (ExcludeGetMode() == WhitelistExclusionMode) {
+	if (SettingsGetExclusionMode() == WhitelistExclusionMode) {
 		defaultWhitelist = std::vector<std::string>();
 	}
 	std::vector<std::string> userWhitelist = vlowercase(regReadMultiString(HKEY_CURRENT_USER, "Software\\Mumble\\Mumble\\overlay", "whitelist"));
@@ -164,7 +164,7 @@ std::vector<std::string> ExcludeGetWhitelist() {
 	return vexclude(vmerge(defaultWhitelist, userWhitelist), actualExcludedWhitelistEntries);
 }
 
-std::vector<std::string> ExcludeGetPaths() {
+std::vector<std::string> SettingsGetPaths() {
 	std::vector<std::string> defaultPaths;
 	std::vector<std::string> userPaths = vlowercase(regReadMultiString(HKEY_CURRENT_USER, "Software\\Mumble\\Mumble\\overlay", "paths"));
 	std::vector<std::string> userExcludedPaths = vlowercase(regReadMultiString(HKEY_CURRENT_USER, "Software\\Mumble\\Mumble\\overlay", "pathsexclude"));
@@ -172,7 +172,7 @@ std::vector<std::string> ExcludeGetPaths() {
 	return vexclude(vmerge(defaultPaths, userPaths), actualExcludedPaths);
 }
 
-std::vector<std::string> ExcludeGetBlacklist() {
+std::vector<std::string> SettingsGetBlacklist() {
 	std::vector<std::string> defaultBlacklist = vlowercase(defaultBlacklistVector());
 	std::vector<std::string> userBlacklist = vlowercase(regReadMultiString(HKEY_CURRENT_USER, "Software\\Mumble\\Mumble\\overlay", "blacklist"));
 	std::vector<std::string> userExcludedBlacklistEntries = vlowercase(regReadMultiString(HKEY_CURRENT_USER, "Software\\Mumble\\Mumble\\overlay", "blacklistexclude"));
