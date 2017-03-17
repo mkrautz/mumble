@@ -5,6 +5,7 @@
 
 #include "lib.h"
 #include "exclude.h"
+#include "util.h"
 
 #include <tlhelp32.h>
 #include <algorithm>
@@ -160,31 +161,6 @@ static bool getAncestorChain(std::vector<std::string> &absAncestorExeNames, std:
 	return ok;
 }
 
-/// Converts the string |s| to lowercase, in place.
-/// The name of this function was chosen such that it rhymes.
-static inline void inPlaceLowerCase(std::string &s) {
-	std::transform(s.begin(), s.end(), s.begin(), tolower);
-}
-
-// Convert the string |s| to lowercase and return it.
-static std::string slowercase(std::string s) {
-	std::transform(s.begin(), s.end(), s.begin(), tolower);
-	return s;
-}
-
-// Convert all entries of |vec| to lowercase and return the resulting vector.
-static std::vector<std::string> vlowercase(std::vector<std::string> vec) {
-	std::transform(vec.begin(), vec.end(), vec.begin(), slowercase);
-	return vec;
-
-}
-
-/// Returns true if |path| is an absolute path.
-/// Returns false if |path| is not an absolute path.
-static bool isAbsPath(const std::string &path) {
-	return path.find("\\") != std::string::npos;
-}
-
 /// Check whether the program at |absExeName|
 /// (with basename of |exeName|) is in the Mumble
 /// overlay program blacklist.
@@ -255,11 +231,11 @@ static bool hasWhitelistedAncestor(const std::vector<std::string> &absAncestorEx
 	return false;
 }
 
-bool ExcludeCheckIsOverlayEnabled(std::string absExeName, std::string exeName) {
+bool ExcludeCheckIsOverlayEnabled(std::string absExeName_, std::string exeName_) {
 	bool enableOverlay = true;
 
-	inPlaceLowerCase(absExeName);
-	inPlaceLowerCase(exeName);
+	std::string absExeName = slowercase(absExeName_);
+	std::string exeName = slowercase(exeName_);
 
 	ExcludeCheckEnsureInitialized();
 
