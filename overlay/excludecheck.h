@@ -7,6 +7,6 @@
 #define MUMBLE_EXCLUDECHECK_H_
 
 /// Check whether the overlay should be enabled for the given absolute and relative exe names.
-bool ExcludeCheckIsOverlayEnabled(std::string absExeName, std::string exeName);
+bool ExcludeCheckIsOverlayEnabled(std::string absExeName_, std::string exeName_);
 
 #endif
