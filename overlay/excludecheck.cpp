@@ -4,7 +4,7 @@
 // Mumble source tree or at <https://www.mumble.info/LICENSE>.
 
 #include "lib.h"
-#include "settings.h"
+#include "olsettings.h"
 #include "util.h"
 #include "ancestor.h"
 
