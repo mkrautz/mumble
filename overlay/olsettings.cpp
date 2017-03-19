@@ -3,7 +3,7 @@
 // that can be found in the LICENSE file at the root of the
 // Mumble source tree or at <https://www.mumble.info/LICENSE>.
 
-#include "settings.h"
+#include "olsettings.h"
 
 #include "lib.h" // include lib.h for Windows headers...
 #include "util.h"
