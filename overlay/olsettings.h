@@ -3,8 +3,8 @@
 // that can be found in the LICENSE file at the root of the
 // Mumble source tree or at <https://www.mumble.info/LICENSE>.
 
-#ifndef MUMBLE_EXCLUDE_H_
-#define MUMBLE_EXCLUDE_H_
+#ifndef MUMBLE_OVERLAY_OLSETTINGS_H_
+#define MUMBLE_OVERLAY_OLSETTINGS_H_
 
 #include <string>
 #include <vector>
@@ -21,22 +21,22 @@ enum OverlayExclusionMode {
 };
 
 /// Get the configured overlay exclusion mode for Mumble.
-OverlayExclusionMode ExcludeGetMode();
+OverlayExclusionMode SettingsGetExclusionMode();
 
 /// Get the list of launcher programs to consider when
 /// checking the overlay exclusion rules.
-std::vector<std::string> ExcludeGetLaunchers();
+std::vector<std::string> SettingsGetLaunchers();
 
 /// Get the list of whitelisted programs to consider when
 /// checking the overlay exclusion rules.
-std::vector<std::string> ExcludeGetWhitelist();
+std::vector<std::string> SettingsGetWhitelist();
 
 /// Get the list of whitelisted paths to consider when
 /// checking the overlay exclusion rules.
-std::vector<std::string> ExcludeGetPaths();
+std::vector<std::string> SettingsGetPaths();
 
 /// Get the list of blacklisted programs to consider when
 /// checking the overlay exclusion rules.
-std::vector<std::string> ExcludeGetBlacklist();
+std::vector<std::string> SettingsGetBlacklist();
 
 #endif
