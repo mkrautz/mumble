@@ -4,7 +4,7 @@
 // Mumble source tree or at <https://www.mumble.info/LICENSE>.
 
 #include "lib.h"
-#include "exclude.h"
+#include "olsettings.h"
 #include "util.h"
 
 #include <tlhelp32.h>
@@ -26,11 +26,11 @@ static void ExcludeCheckEnsureInitialized() {
 		return;
 	}
 
-	oemExcludeMode = ExcludeGetMode();
-	vLaunchers = ExcludeGetLaunchers();
-	vWhitelist = ExcludeGetWhitelist();
-	vPaths = ExcludeGetPaths();
-	vBlacklist = ExcludeGetBlacklist();
+	oemExcludeMode = SettingsGetExclusionMode();
+	vLaunchers = SettingsGetLaunchers();
+	vWhitelist = SettingsGetWhitelist();
+	vPaths = SettingsGetPaths();
+	vBlacklist = SettingsGetBlacklist();
 
 	bExcludeCheckInitialized = true;
 }
