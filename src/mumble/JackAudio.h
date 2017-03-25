@@ -36,6 +36,7 @@
 #include "AudioInput.h"
 #include "AudioOutput.h"
 
+#include <QtCore/QWaitCondition>
 #include <jack/jack.h>
 
 class JackAudioOutput;
