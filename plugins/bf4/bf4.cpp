@@ -6,7 +6,7 @@
 #include "../mumble_plugin_win32_64bit.h" // Include standard plugin header.
 #include "../mumble_plugin_utils.h" // Include plugin header for special functions, like "escape".
 
-static int fetch(float *avatar_pos, float *avatar_front, float *avatar_top, float *camera_pos, float *camera_front, float *camera_top, std::string &context, std::wstring &identity) {
+static int fetch(float *avatar_pos, float *avatar_front, float *avatar_top, float *camera_pos, float *camera_front, float *camera_top, MumbleByteString *context, MumbleWideString *identity) {
 	for (int i=0;i<3;i++) {
 		avatar_pos[i] = avatar_front[i] = avatar_top[i] = camera_pos[i] = camera_front[i] = camera_top[i] = 0.0f;
 	}
@@ -54,8 +54,8 @@ static int fetch(float *avatar_pos, float *avatar_front, float *avatar_top, floa
 	}
 
 	if (state) { // If not in-game
-		context.clear(); // Clear context
-		identity.clear(); // Clear identity
+		MumbleByteStringClear(context);
+		MumbleWideStringClear(identity);
 		// Set vectors values to 0.
 		for (int i=0;i<3;i++) {
 			avatar_pos[i] = avatar_front[i] = avatar_top[i] = camera_pos[i] =  camera_front[i] = camera_top[i] = 0.0f;
@@ -67,7 +67,8 @@ static int fetch(float *avatar_pos, float *avatar_front, float *avatar_top, floa
 	escape(serverid, sizeof(serverid));
 	std::ostringstream ocontext;
 	ocontext << " {\"Server ID\": \"" << serverid << "\"}"; // Set context with server ID
-	context = ocontext.str();
+
+	MumbleByteStringAssign(context, ocontext.str());
 
 	std::wostringstream oidentity;
 	oidentity << "{";
@@ -160,7 +161,8 @@ static int fetch(float *avatar_pos, float *avatar_front, float *avatar_top, floa
 	}
 
 	oidentity << std::endl << "}";
-	identity = oidentity.str();
+
+	MumbleWideStringAssign(identity, oidentity.str());
 
 	// Flip the front vector
 	for (int i=0;i<3;i++) {
@@ -182,18 +184,18 @@ static int fetch(float *avatar_pos, float *avatar_front, float *avatar_top, floa
 	return true;
 }
 
-static int trylock(const std::multimap<std::wstring, unsigned long long int> &pids) {
+static int trylock(MumblePIDLookup lookupFunc) {
 
-	if (! initialize(pids, L"bf4.exe")) { // Link the game executable
+	if (! initializeC(lookupFunc, L"bf4.exe")) { // Link the game executable
 		return false;
 	}
 
 	// Check if we can get meaningful data from it
 	float apos[3], afront[3], atop[3], cpos[3], cfront[3], ctop[3];
-	std::wstring sidentity;
-	std::string scontext;
+	MumbleByteString context = { NULL, 0 };
+	MumbleWideString identity = { NULL, 0 };
 
-	if (fetch(apos, afront, atop, cpos, cfront, ctop, scontext, sidentity)) {
+	if (fetch(apos, afront, atop, cpos, cfront, ctop, &context, &identity)) {
 		return true;
 	} else {
 		generic_unlock();
@@ -201,39 +203,16 @@ static int trylock(const std::multimap<std::wstring, unsigned long long int> &pi
 	}
 }
 
-static const std::wstring longdesc() {
-	return std::wstring(L"Supports Battlefield 4 with context and identity support."); // Plugin long description
-}
-
-static std::wstring description(L"Battlefield 4 (x64) version 1.7.2.45672"); // Plugin short description
-static std::wstring shortname(L"Battlefield 4"); // Plugin short name
-
-static int trylock1() {
-	return trylock(std::multimap<std::wstring, unsigned long long int>());
-}
-
-static MumblePlugin bf4plug = {
-    MUMBLE_PLUGIN_MAGIC,
-    description,
-    shortname,
-    NULL,
-    NULL,
-    trylock1,
-    generic_unlock,
-    longdesc,
-    fetch
+static MumblePluginC bf4plugC = {
+	MUMBLE_PLUGIN_MAGIC_C,
+	MUMBLE_PLUGIN_C_VERSION,
+	MumbleInitConstWideString(L"Battlefield 4 (C)"),
+	MumbleInitConstWideString(L"Battlefield 4"),
+	trylock,
+	generic_unlock,
+	fetch
 };
 
-static MumblePlugin2 bf4plug2 = {
-    MUMBLE_PLUGIN_MAGIC_2,
-    MUMBLE_PLUGIN_VERSION,
-    trylock
-};
-
-extern "C" MUMBLE_PLUGIN_EXPORT MumblePlugin *getMumblePlugin() {
-	return &bf4plug;
-}
-
-extern "C" MUMBLE_PLUGIN_EXPORT MumblePlugin2 *getMumblePlugin2() {
-	return &bf4plug2;
+extern "C" MUMBLE_PLUGIN_EXPORT MumblePluginC *getMumblePluginC() {
+	return &bf4plugC;
 }

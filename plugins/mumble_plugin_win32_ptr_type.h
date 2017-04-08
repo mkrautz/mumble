@@ -133,6 +133,52 @@ static bool inline initialize(const std::multimap<std::wstring, unsigned long lo
 	return true;
 }
 
+static bool inline initializeC(MumblePIDLookup lookupFunc, const wchar_t *procname, const wchar_t *modname = NULL) {
+	hProcess = NULL;
+	pModule = 0;
+
+	if (lookupFunc != NULL) {
+		MumblePIDLookupContext ctx = NULL;
+
+		while (1) {
+			unsigned long long pid;
+			MumblePIDLookupStatus status = lookupFunc(ctx, procname, &pid);
+			if (status == MUMBLE_PID_LOOKUP_OK) {
+				// 'pid' is filled out with a pid for bf1_x64.exe,
+				// and the caller can continue to look for more pids
+				// by calling lookupFunc again.
+				//
+				// But for now, we'll accept the first one.
+				dwPid = static_cast<DWORD>(pid);
+				break;
+			} else if (status == MUMBLE_PID_LOOKUP_EOF) {
+				// no entry was found
+				break;
+			}
+		}
+	} else {
+		dwPid=getProcess(procname);
+	}
+
+	if (!dwPid)
+		return false;
+
+	pModule=getModuleAddr(modname ? modname : procname);
+	if (!pModule) {
+		dwPid = 0;
+		return false;
+	}
+
+	hProcess=OpenProcess(PROCESS_VM_READ, false, dwPid);
+	if (!hProcess) {
+		dwPid = 0;
+		pModule = 0;
+		return false;
+	}
+
+	return true;
+}
+
 static void generic_unlock() {
 	if (hProcess) {
 		CloseHandle(hProcess);

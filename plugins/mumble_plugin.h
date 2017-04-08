@@ -66,6 +66,8 @@
 # define MUMBLE_PLUGIN_MAGIC_QT 0xf457357a
 #endif
 
+#define MUMBLE_PLUGIN_MAGIC_C   0xf010101d
+
 #define MUMBLE_PLUGIN_VERSION 2
 
 typedef struct _MumblePlugin {
@@ -117,9 +119,81 @@ typedef struct _MumblePluginQt {
 	void (MUMBLE_PLUGIN_CALLING_CONVENTION *config)(void *ptr);
 } MumblePluginQt;
 
+typedef struct _MumbleByteString {
+	unsigned char *buf;
+	size_t len;
+} MumbleByteString;
+
+typedef struct _MumbleWideString {
+	wchar_t *str;
+	size_t len;
+} MumbleWideString;
+
+#define MumbleInitConstWideString(cs) \
+	{ cs, sizeof(cs)/sizeof(cs[0]) }
+
+static inline void MumbleByteStringClear(MumbleByteString *bs) {
+	if (bs != NULL && bs->buf != NULL) {
+		memset(bs->buf, 0, bs->len);
+	}
+}
+
+static inline void MumbleByteStringAssign(MumbleByteString *bs, const std::string &s) {
+	if (bs != NULL && bs->buf != NULL) {
+		memset(bs->buf, 0, bs->len);
+		
+		size_t nc = s.size();
+		if (nc > bs->len - 1) {
+			nc = bs->len - 1;
+		}
+
+		memcpy(bs->buf, s.c_str(), nc);
+	}
+}
+
+static inline void MumbleWideStringClear(MumbleWideString *mws) {
+	if (mws != NULL && mws->str != NULL) {
+		memset(mws->str, 0, mws->len * sizeof(wchar_t));
+	}
+}
+
+static inline void MumbleWideStringAssign(MumbleWideString *mws, const std::wstring &ws) {
+	if (mws != NULL && mws->str != NULL) {
+		memset(mws->str, 0, mws->len * sizeof(wchar_t));
+		
+		size_t nc = ws.size() * sizeof(wchar_t);
+		if (nc > (mws->len * sizeof(wchar_t)) - sizeof(wchar_t)) {
+			nc = (mws->len * sizeof(wchar_t)) - sizeof(wchar_t);
+		}
+
+		memcpy(mws->str, ws.c_str(), nc);
+	}
+}
+
+typedef int MumblePIDLookupStatus;
+
+#define MUMBLE_PID_LOOKUP_EOF  0
+#define MUMBLE_PID_LOOKUP_OK   1
+
+typedef void * MumblePIDLookupContext; 
+typedef MumblePIDLookupStatus (*MumblePIDLookup)(MumblePIDLookupContext ctx, const wchar_t *str, unsigned long long *pid);
+
+#define MUMBLE_PLUGIN_C_VERSION 1
+
+typedef struct _MumblePluginC {
+	unsigned int magic;
+	unsigned int version;
+	MumbleWideString description;
+	MumbleWideString shortname;
+	int (MUMBLE_PLUGIN_CALLING_CONVENTION *trylock)(MumblePIDLookup lookupFunc);
+	void (MUMBLE_PLUGIN_CALLING_CONVENTION *unlock)();
+	int (MUMBLE_PLUGIN_CALLING_CONVENTION *fetch)(float *avatar_pos, float *avatar_front, float *avatar_top, float *camera_pos, float *camera_front, float *camera_top, MumbleByteString *context, MumbleWideString *identity);
+} MumblePluginC;
+
 typedef MumblePlugin *(MUMBLE_PLUGIN_CALLING_CONVENTION *mumblePluginFunc)();
 typedef MumblePlugin2 *(MUMBLE_PLUGIN_CALLING_CONVENTION *mumblePlugin2Func)();
 typedef MumblePluginQt *(MUMBLE_PLUGIN_CALLING_CONVENTION *mumblePluginQtFunc)();
+typedef MumblePluginC *(MUMBLE_PLUGIN_CALLING_CONVENTION *mumblePluginCFunc)();
 
 /*
  * All plugins must implement one function called mumbleGetPlugin(), which

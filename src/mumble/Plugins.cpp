@@ -34,6 +34,7 @@ struct PluginInfo {
 	MumblePlugin *p;
 	MumblePlugin2 *p2;
 	MumblePluginQt *pqt;
+	MumblePluginC *pc;
 	PluginInfo();
 };
 
@@ -294,39 +295,55 @@ void Plugins::rescanPlugins() {
 			pi->lib.setFileName(libname);
 			pi->filename = fname;
 			if (pi->lib.load()) {
-				mumblePluginFunc mpf = reinterpret_cast<mumblePluginFunc>(pi->lib.resolve("getMumblePlugin"));
-				if (mpf) {
+				mumblePluginFunc mpcf = reinterpret_cast<mumblePluginCFunc>(pi->lib.resolve("getMumblePluginC"));
+				if (mpcf) {
 					evaluated.insert(fname);
-					pi->p = mpf();
+					pi->pc = mpfc();
 
-					// Check whether the plugin has a valid plugin magic and that it's not retracted.
-					// A retracted plugin is a plugin that clients should disregard, typically because
-					// the game the plugin was written for now provides positional audio via the
-					// link plugin (see null_plugin.cpp).
-					if (pi->p && pi->p->magic == MUMBLE_PLUGIN_MAGIC && pi->p->shortname != L"Retracted") {
-
-						pi->description = QString::fromStdWString(pi->p->description);
-						pi->shortname = QString::fromStdWString(pi->p->shortname);
+					// XXX: check for redacted?
+					if (pi->pc && pi->pc->magic == MUMBLE_PLUGIN_C_MAGIC) {
+						pi->description = QString::fromWCharArray(pi->pc->description.str);
+						pi->shortname = QString::fromStdWString(pi->p->shortname.str);
 						pi->enabled = g.s.qmPositionalAudioPlugins.value(pi->filename, true);
+					}
 
-						mumblePlugin2Func mpf2 = reinterpret_cast<mumblePlugin2Func>(pi->lib.resolve("getMumblePlugin2"));
-						if (mpf2) {
-							pi->p2 = mpf2();
-							if (pi->p2->magic != MUMBLE_PLUGIN_MAGIC_2) {
-								pi->p2 = NULL;
+					qlPlugins << pi;
+					continue;
+				} else {
+					mumblePluginFunc mpf = reinterpret_cast<mumblePluginFunc>(pi->lib.resolve("getMumblePlugin"));
+					if (mpf) {
+						evaluated.insert(fname);
+						pi->p = mpf();
+
+						// Check whether the plugin has a valid plugin magic and that it's not retracted.
+						// A retracted plugin is a plugin that clients should disregard, typically because
+						// the game the plugin was written for now provides positional audio via the
+						// link plugin (see null_plugin.cpp).
+						if (pi->p && pi->p->magic == MUMBLE_PLUGIN_MAGIC && pi->p->shortname != L"Retracted") {
+
+							pi->description = QString::fromStdWString(pi->p->description);
+							pi->shortname = QString::fromStdWString(pi->p->shortname);
+							pi->enabled = g.s.qmPositionalAudioPlugins.value(pi->filename, true);
+
+							mumblePlugin2Func mpf2 = reinterpret_cast<mumblePlugin2Func>(pi->lib.resolve("getMumblePlugin2"));
+							if (mpf2) {
+								pi->p2 = mpf2();
+								if (pi->p2->magic != MUMBLE_PLUGIN_MAGIC_2) {
+									pi->p2 = NULL;
+								}
 							}
-						}
 
-						mumblePluginQtFunc mpfqt = reinterpret_cast<mumblePluginQtFunc>(pi->lib.resolve("getMumblePluginQt"));
-						if (mpfqt) {
-							pi->pqt = mpfqt();
-							if (pi->pqt->magic != MUMBLE_PLUGIN_MAGIC_QT) {
-								pi->pqt = NULL;
+							mumblePluginQtFunc mpfqt = reinterpret_cast<mumblePluginQtFunc>(pi->lib.resolve("getMumblePluginQt"));
+							if (mpfqt) {
+								pi->pqt = mpfqt();
+								if (pi->pqt->magic != MUMBLE_PLUGIN_MAGIC_QT) {
+									pi->pqt = NULL;
+								}
 							}
-						}
 
-						qlPlugins << pi;
-						continue;
+							qlPlugins << pi;
+							continue;
+						}
 					}
 				}
 				pi->lib.unload();
