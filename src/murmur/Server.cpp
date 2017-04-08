@@ -186,6 +186,8 @@ Server::Server(int snum, QObject *p) : QThread(p) {
 				}
 			}
 
+			HostAddress aha(addr);
+			qWarning("Bound UDP socket to %s", qPrintable(aha.toString()));
 			if (::bind(sock, reinterpret_cast<sockaddr *>(&addr), len) == SOCKET_ERROR) {
 				log(QString("Failed to bind UDP Socket to %1").arg(addressToString(ss->serverAddress(), usPort)));
 			} else {
@@ -642,6 +644,8 @@ void Server::udpActivated(int socket) {
 	len=::recvfrom(sock, encrypt, UDP_PACKET_SIZE, 0, reinterpret_cast<struct sockaddr *>(&from), &fromlen);
 #endif
 
+	qWarning("udpactivated %i", len);
+
 	// Cloned from ::run(), as it's the only UDP data we care about until the thread is started.
 	quint32 *ping = reinterpret_cast<quint32 *>(encrypt);
 	if ((len == 12) && (*ping == 0) && bAllowPing) {
@@ -655,7 +659,25 @@ void Server::udpActivated(int socket) {
 		// address. So we can reuse most of the same msg and control data.
 		iov[0].iov_len = 6 * sizeof(quint32);
 		::sendmsg(sock, &msg, 0);
+
+//		struct in_pktinfo *ipi = reinterpret_cast<struct in_pktinfo *>(&controldata);
+		qWarning("controldata len = %i", sizeof(controldata));
+		qWarning("now at %i", msg.msg_controllen);
+
+		struct cmsghdr *cmsg = CMSG_FIRSTHDR(&msg);
+		if (cmsg->cmsg_type == IP_PKTINFO) {
+			qWarning("WOW!!!");
+		}
+		if (cmsg->cmsg_type == IPV6_PKTINFO) {
+			qWarning("WOW6!!!");
+			struct in6_pktinfo *pi = reinterpret_cast<struct in6_pktinfo *>(CMSG_DATA(cmsg));
+			HostAddress aha2(QByteArray(reinterpret_cast<char *>(&pi->ipi6_addr.s6_addr), 16));
+			qWarning("addr = %s", qPrintable(aha2.toString()));
+		}
+
 #else
+		HostAddress aha(from);
+		qWarning("%s", qPrintable(aha.toString()));
 		::sendto(sock, encrypt, 6 * sizeof(quint32), 0, reinterpret_cast<struct sockaddr *>(&from), fromlen);
 #endif
 	}
@@ -889,6 +911,7 @@ bool Server::checkDecrypt(ServerUser *u, const char *encrypt, char *plain, unsig
 }
 
 void Server::sendMessage(ServerUser *u, const char *data, int len, QByteArray &cache, bool force) {
+	qWarning("wat?");
 	if ((QAtomicIntLoad(u->aiUdpFlag) == 1 || force) && (u->sUdpSocket != INVALID_SOCKET)) {
 #if defined(__LP64__)
 		STACKVAR(char, ebuffer, len+4+16);
@@ -938,14 +961,20 @@ void Server::sendMessage(ServerUser *u, const char *data, int len, QByteArray &c
 			struct in6_pktinfo *pktinfo = reinterpret_cast<struct in6_pktinfo *>(CMSG_DATA(cmsg));
 			memset(pktinfo, 0, sizeof(*pktinfo));
 			memcpy(&pktinfo->ipi6_addr.s6_addr[0], &tcpha.qip6.c[0], sizeof(pktinfo->ipi6_addr.s6_addr));
+			qWarning("OHHH YEAH!");
+			struct in6_pktinfo *pi = pktinfo;
+			HostAddress aha2(QByteArray(reinterpret_cast<char *>(&pi->ipi6_addr.s6_addr), 16));
+			qWarning("addr = %s", qPrintable(aha2.toString()));
 		} else {
 			cmsg->cmsg_level = IPPROTO_IP;
 			cmsg->cmsg_type = IP_PKTINFO;
 			cmsg->cmsg_len = CMSG_LEN(sizeof(struct in_pktinfo));
 			struct in_pktinfo *pktinfo = reinterpret_cast<struct in_pktinfo *>(CMSG_DATA(cmsg));
 			memset(pktinfo, 0, sizeof(*pktinfo));
-			if (tcpha.isV6())
+			if (tcpha.isV6()) {
+				qWarning("ouchies! no cmsg!");
 				return;
+			}
 			pktinfo->ipi_spec_dst.s_addr = tcpha.hash[3];
 		}
 
