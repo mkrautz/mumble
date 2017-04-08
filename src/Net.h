@@ -6,40 +6,8 @@
 #ifndef MUMBLE_NET_H_
 #define MUMBLE_NET_H_
 
-#include <QtCore/QDateTime>
-#include <QtCore/QString>
-
-struct HostAddress;
-
 #ifndef DEFAULT_MUMBLE_PORT
 #define DEFAULT_MUMBLE_PORT 64738
-#endif
-
-struct Ban {
-	HostAddress haAddress;
-	int iMask;
-	QString qsUsername;
-	QString qsHash;
-	QString qsReason;
-	QDateTime qdtStart;
-	unsigned int iDuration;
-	bool isExpired() const;
-	bool isValid() const;
-	bool operator < (const Ban &) const;
-	bool operator == (const Ban &) const;
-	QString toString() const;
-};
-
-quint32 qHash(const Ban &);
-
-#if Q_BYTE_ORDER == Q_BIG_ENDIAN
-#define SWAP64(x) (x)
-#else
-#if defined(__x86_64__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3))
-#define SWAP64(x) __builtin_bswap64(x)
-#else
-#define SWAP64(x) qbswap<quint64>(x)
-#endif
 #endif
 
 #endif

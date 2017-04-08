@@ -6,6 +6,7 @@
 #include "murmur_pch.h"
 
 #include "HostAddress.h"
+#include "ByteSwap.h"
 
 HostAddress::HostAddress() {
 	addr[0] = addr[1] = 0ULL;
@@ -131,7 +132,7 @@ QString HostAddress::toString() const {
 		} else {
 			return QLatin1String("[::]");
 		}
-	} else {
+	} else a {
 		return QHostAddress(ntohl(hash[3])).toString();
 	}
 }
