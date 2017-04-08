@@ -132,7 +132,7 @@ QString HostAddress::toString() const {
 		} else {
 			return QLatin1String("[::]");
 		}
-	} else a {
+	} else {
 		return QHostAddress(ntohl(hash[3])).toString();
 	}
 }
