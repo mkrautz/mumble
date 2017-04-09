@@ -18,6 +18,7 @@
 #include "Global.h"
 #include "ServerHandler.h"
 #include "WebFetch.h"
+#include "Net.h"
 
 QMap<QString, QIcon> ServerItem::qmIcons;
 QList<PublicInfo> ConnectDialog::qlPublicServers;
