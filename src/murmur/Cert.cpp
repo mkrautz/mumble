@@ -64,6 +64,7 @@ static bool selfSignedServerCert_SHA1_RSA_2048(QSslCertificate &qscCert, QSslKey
 		qscCert = QSslCertificate(crt, QSsl::Der);
 		if (qscCert.isNull()) {
 			ok = false;
+			goto out;
 		}
 	}
 
@@ -75,9 +76,11 @@ static bool selfSignedServerCert_SHA1_RSA_2048(QSslCertificate &qscCert, QSslKey
 		qskKey = QSslKey(key, QSsl::Rsa, QSsl::Der);
 		if (qskKey.isNull()) {
 			ok = false;
+			goto out;
 		}
 	}
 
+out:
 	if (!ok) {
 		qscCert = QSslCertificate();
 		qskKey = QSslKey();
