@@ -25,6 +25,7 @@ static int add_ext(X509 * crt, int nid, char *value) {
 }
 
 static bool selfSignedServerCert_SHA1_RSA_2048(QSslCertificate &qscCert, QSslKey &qskKey) {
+	bool ok = true;
 	X509 *x509 = NULL;
 	EVP_PKEY *pkey = NULL;
 	RSA *rsa = NULL;
