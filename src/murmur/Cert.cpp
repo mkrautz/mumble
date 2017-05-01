@@ -196,7 +196,17 @@ void Server::initializeCert() {
 
 			X509 *x509 = X509_new();
 			EVP_PKEY *pkey = EVP_PKEY_new();
-			RSA *rsa = RSA_generate_key(2048,RSA_F4,NULL,NULL);
+
+			BIGNUM *e = BN_new();
+			if (BN_set_word(e, 65537) != 1) {
+				qFatal("BN_set_word failed");
+			}
+
+			RSA *rsa = RSA_new();
+			if (RSA_generate_key_ex(rsa, 2048, e, NULL) != 1) {
+				qFatal("RSA_generate_key_ex failed");
+			}
+
 			EVP_PKEY_assign_RSA(pkey, rsa);
 
 			X509_set_version(x509, 2);
