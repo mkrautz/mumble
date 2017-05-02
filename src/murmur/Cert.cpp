@@ -66,7 +66,7 @@ static bool selfSignedServerCert_SHA1_RSA_2048(QSslCertificate &qscCert, QSslKey
 	if (ok) {
 		QByteArray key;
 		key.resize(i2d_PrivateKey(pkey, NULL));
-		dptr=reinterpret_cast<unsigned char *>(key.data());
+		unsigned char *dptr=dptr=reinterpret_cast<unsigned char *>(key.data());
 		i2d_PrivateKey(pkey, &dptr);
 
 		qskKey = QSslKey(key, QSsl::Rsa, QSsl::Der);
