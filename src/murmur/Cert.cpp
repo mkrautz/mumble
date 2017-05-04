@@ -57,7 +57,7 @@ static bool selfSignedServerCert_SHA1_RSA_2048(QSslCertificate &qscCert, QSslKey
 		goto out;
 	}
 
-	rsa = RSA_generate_key(2048,RSA_F4,NULL,NULL);
+	rsa = RSA_generate_key(2048, RSA_F4, NULL, NULL);
 	if (rsa == NULL) {
 		ok = false;
 		goto out;
