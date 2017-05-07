@@ -38,6 +38,7 @@ static bool selfSignedServerCert_SHA1_RSA_2048(QSslCertificate &qscCert, QSslKey
 	ASN1_INTEGER *serialNumber = NULL;
 	ASN1_TIME *notBefore = NULL;
 	ASN1_TIME *notAfter = NULL;
+	X509_NAME *name = NULL;
 	unsigned char *commonName = NULL;
 
 	if (CRYPTO_mem_ctrl(CRYPTO_MEM_CHECK_ON) == -1) {
@@ -123,7 +124,7 @@ static bool selfSignedServerCert_SHA1_RSA_2048(QSslCertificate &qscCert, QSslKey
 		goto out;
 	}
 
-	X509_NAME *name = X509_get_subject_name(x509);
+	name = X509_get_subject_name(x509);
 	if (name == NULL) {
 		ok = false;
 		goto out;
