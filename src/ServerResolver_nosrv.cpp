@@ -69,6 +69,22 @@ ServerResolver::ServerResolver(QObject *parent)
 	d = new ServerResolverPrivate(this);
 }
 
+QString ServerResolver::hostname() {
+	if (d) {
+		return d->m_origHostname;
+	}
+
+	return QString();
+}
+
+quint16 ServerResolver::port() {
+	if (d) {
+		return d->m_origPort;
+	}
+
+	return 0;
+}
+
 void ServerResolver::resolve(QString hostname, quint16 port) {
 	if (d) {
 		connect(d, SIGNAL(resolved()), this, SIGNAL(resolved()));
