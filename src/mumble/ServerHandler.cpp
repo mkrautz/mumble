@@ -585,7 +585,7 @@ void ServerHandler::serverConnectionClosed(QAbstractSocket::SocketError err, con
 		if (err == QAbstractSocket::ConnectionRefusedError || err == QAbstractSocket::SocketTimeoutError) {
 			qWarning("ServerHandler: connection attempt to %s:%i failed: %s (%li); trying next server....",
 						qPrintable(qpaTargetServer.first.toString()), qpaTargetServer.second,
-						qPrintable(reason), err);
+						qPrintable(reason), static_cast<long>(err));
 			exit(-2);
 			return;
 		}
