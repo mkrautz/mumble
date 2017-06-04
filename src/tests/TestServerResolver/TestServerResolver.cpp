@@ -100,7 +100,7 @@ void TestServerResolver::simpleA() {
 	QCOMPARE(record.hostname(), hostname);
 	QCOMPARE(record.port(), port);
 	QCOMPARE(record.addresses().size(), 1);
-	QCOMPARE(record.priority(), 0);
+	QCOMPARE(record.priority(), static_cast<qint64>(0));
 
 	HostAddress want(QHostAddress(QLatin1String("127.0.0.1")));
 	HostAddress got = record.addresses().at(0);
@@ -139,7 +139,7 @@ void TestServerResolver::simpleAAAA() {
 	QCOMPARE(record.hostname(), hostname);
 	QCOMPARE(record.port(), port);
 	QCOMPARE(record.addresses().size(), 1);
-	QCOMPARE(record.priority(), 0);
+	QCOMPARE(record.priority(), static_cast<qint64>(0));
 
 	HostAddress want(QHostAddress(QLatin1String("::1")));
 	HostAddress got = record.addresses().at(0);
