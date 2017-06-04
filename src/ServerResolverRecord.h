@@ -16,15 +16,15 @@ class ServerResolverRecord {
 		ServerResolverRecord();
 		ServerResolverRecord(QString hostname_, quint16 port_, qint64 priority_, QList<HostAddress> addresses_);
 
-		qint64 priority();
 		QString hostname();
 		quint16 port();
+		qint64 priority();
 		QList<HostAddress> addresses();
 
 	protected:
-		qint64 m_priority;
 		QString m_hostname;
 		quint16 m_port;
+		qint64 m_priority;
 		QList<HostAddress> m_addresses;
 };
 
