@@ -567,8 +567,6 @@ void ServerHandler::disconnect() {
 }
 
 void ServerHandler::serverConnectionClosed(QAbstractSocket::SocketError err, const QString &reason) {
-	qWarning("scc %lu %s", static_cast<unsigned long>(err), qPrintable(reason));
-
 	Connection *c = cConnection.get();
 	if (! c)
 		return;
