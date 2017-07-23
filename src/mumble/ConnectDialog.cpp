@@ -1538,9 +1538,6 @@ void ConnectDialog::lookedUp(QHostInfo info) {
 	if (info.error() != QHostInfo::NoError)
 		return;
 
-	qlDNSLookup.removeAll(host);
-	qhDNSCache.insert(host, info.addresses());
-
 	QSet<qpAddress> qs;
 
 	foreach(ServerItem *si, qhDNSWait[host]) {
@@ -1558,6 +1555,8 @@ void ConnectDialog::lookedUp(QHostInfo info) {
 		}
 	}
 
+	qlDNSLookup.removeAll(host);
+	qhDNSCache.insert(host, info.addresses());
 	qhDNSWait.remove(host);
 
 	if (bAllowPing) {
