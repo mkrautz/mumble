@@ -16,6 +16,8 @@
 // 3rdparty/xinputcheck-src.
 #include <xinputcheck.h>
 
+#include "WindowsVKTable.h"
+
 #undef FAILED
 #define FAILED(Status) (static_cast<HRESULT>(Status)<0)
 
